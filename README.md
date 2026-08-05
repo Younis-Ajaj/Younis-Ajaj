@@ -1,4 +1,4 @@
-# Hi, I'm Yunes 👋
+# Hi, I'm Younis 👋
 
 🎓 Data Science & Artificial Intelligence Student
 
