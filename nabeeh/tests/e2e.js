@@ -29,7 +29,7 @@ function sse(text) {
     let text = 'شرح تجريبي من المعلّم.';
     if (prompt.includes('mind map')) text = JSON.stringify({ center: 'الفرضيات', branches: [{ title: 'فرضية العدم', children: ['H0', 'رفض'] }, { title: 'الدلالة', children: ['alpha'] }, { title: 'القيمة الاحتمالية', children: ['p-value'] }, { title: 'الأخطاء', children: ['النوع الأول', 'النوع الثاني'] }] });
     else if (prompt.includes('multiple-choice')) text = JSON.stringify({ questions: [{ q: 'ما مستوى الدلالة الشائع؟', options: ['0.05', '0.5', '5', '50'], answer: 0, why: 'الأكثر استخداماً' }, { q: 'ماذا تعني H0؟', options: ['فرضية العدم', 'البديلة', 'العينة', 'المجتمع'], answer: 0, why: 'تعريف' }] });
-    else if (prompt.includes('flashcards')) text = JSON.stringify({ cards: [{ q: 'ما القيمة الاحتمالية؟', a: 'احتمال نتائج متطرفة بافتراض H0' }, { q: 'ما الخطأ من النوع الأول؟', a: 'رفض H0 وهي صحيحة' }] });
+    else if (prompt.includes('most exam-relevant flashcards')) text = JSON.stringify({ cards: [{ q: 'ما القيمة الاحتمالية؟', a: 'احتمال نتائج متطرفة بافتراض H0' }, { q: 'ما الخطأ من النوع الأول؟', a: 'رفض H0 وهي صحيحة' }] });
     else if (prompt.includes('Feynman')) text = JSON.stringify({ score: 84, good: ['فهمت H0'], gaps: ['الدلالة'], wrong: [], better: 'شرح أفضل', next: 'سؤال' });
     await route.fulfill({ status: 200, headers: { 'content-type': 'text/event-stream', 'access-control-allow-origin': '*' }, body: sse(text) });
   });
@@ -83,6 +83,19 @@ function sse(text) {
   await p.click('#missBtn'); await p.waitForTimeout(400);
   check('reschedule clears the banner', !(await p.isVisible('#missBanner')));
   await D();
+  // chat, basic mode
+  await p.evaluate(() => location.hash = 'chat'); await p.waitForTimeout(400);
+  check('chat shows basic mode without a key', (await p.textContent('#chatMode')).includes('الأساسي'));
+  await p.click('#chatSug button >> nth=0'); await p.waitForTimeout(300);
+  const todayReply = await p.textContent('#chatLog .msg.bot >> nth=-1');
+  check('chat answers "what to study today" from the plan', /جلسات|أنجزت/.test(todayReply), todayReply.slice(0, 60));
+  await p.fill('#chatIn', 'متى امتحاني القادم؟'); await p.press('#chatIn', 'Enter'); await p.waitForTimeout(300);
+  check('chat lists upcoming exams', (await p.textContent('#chatLog .msg.bot >> nth=-1')).includes('امتحاناتك'));
+  await p.fill('#chatIn', 'كيف أستخدم البطاقات؟'); await p.click('#chatSend'); await p.waitForTimeout(300);
+  check('chat explains a tool with a formatted answer', (await p.$$('#chatLog .msg.bot >> nth=-1 >> h4')).length === 1 && (await p.$$('#chatLog .msg.bot >> nth=-1 >> li')).length >= 3);
+  await p.fill('#chatIn', '<img src=x onerror=alert(1)>'); await p.click('#chatSend'); await p.waitForTimeout(300);
+  check('chat escapes HTML from the user', (await p.$$('#chatLog img')).length === 0);
+  await D();
   // 5. review cards
   await p.evaluate(() => location.hash = 'review'); await p.waitForTimeout(300);
   await p.fill('#cQ', 'ما H0؟'); await p.fill('#cA', 'فرضية العدم'); await p.click('#cAdd');
@@ -120,6 +133,11 @@ function sse(text) {
   check('AI cards added to the deck', (await p.evaluate(() => JSON.parse(localStorage.getItem('studyplan.v1')).cards.length)) >= 3);
   await p.click('[data-mode="feynman"]'); await p.fill('#feyIn', 'فرضية العدم هي الادعاء الذي نختبره ونرفضه إذا كانت القيمة الاحتمالية أصغر من مستوى الدلالة المختار مسبقاً.'); await p.click('#feyGo'); await p.waitForTimeout(1500); await D();
   check('Feynman score shown', (await p.textContent('#feyOut')).includes('84'));
+  await p.evaluate(() => location.hash = 'chat'); await p.waitForTimeout(300);
+  check('chat switches to AI mode with a key', (await p.textContent('#chatMode')).includes('الذكاء'));
+  await p.fill('#chatIn', 'اشرح لي القيمة الاحتمالية'); await p.click('#chatSend'); await p.waitForTimeout(1500); await D();
+  check('chat streams the AI answer', (await p.textContent('#chatLog .msg.bot >> nth=-1')).includes('شرح تجريبي'));
+  check('chat sends tutor instructions with the question', !!lastBody && JSON.stringify(lastBody.messages).includes('You are Nabeeh') && JSON.stringify(lastBody.messages).includes('القيمة الاحتمالية'));
   await p.evaluate(() => location.hash = 'stats'); await p.waitForTimeout(300);
   await p.click('#repBtn'); await p.waitForTimeout(1500); await D();
   check('weekly AI report written', (await p.textContent('#repOut')).length > 5);
@@ -139,7 +157,7 @@ function sse(text) {
   // 9. export / import
   await p.evaluate(() => location.hash = 'stats'); await p.waitForTimeout(300);
   const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#expBtn')]);
-  const file = path.join(__dirname, 'backup-test.json'); await dl.saveAs(file);
+  const file = path.join(require('os').tmpdir(), 'nabeeh-backup-test.json'); await dl.saveAs(file);
   const exported = JSON.parse(fs.readFileSync(file, 'utf8'));
   check('backup exports state', Array.isArray(exported.subjects) && exported.subjects.length === 3 && !JSON.stringify(exported).includes('sk-ant-'));
   await D();
@@ -156,7 +174,7 @@ function sse(text) {
   check('erase removes the saved key', !(await p.evaluate(() => (sessionStorage.getItem('nabeeh.ak') || '') + (localStorage.getItem('nabeeh.ak') || ''))));
   check('no console errors', errs.length === 0, errs.slice(0, 3).join(' | '));
   check('no CSP violations', csp.length === 0, csp.slice(0, 2).join(' | '));
-  check('mocked API was called', apiCalls >= 7, 'calls=' + apiCalls);
+  check('mocked API was called', apiCalls >= 8, 'calls=' + apiCalls);
 
   await D();
   // 12. focus timer with a fake clock
@@ -176,7 +194,7 @@ function sse(text) {
   await m.goto(URL0); await m.waitForTimeout(800);
   for (const lang of ['ar', 'en']) {
     await m.evaluate(l => { const s = JSON.parse(localStorage.getItem('studyplan.v1') || '{}'); s.lang = l; s.onboarded = true; localStorage.setItem('studyplan.v1', JSON.stringify(s)) }, lang);
-    for (const v of ['welcome', 'today', 'plan', 'focus', 'tutor', 'review', 'stats', 'grades']) { await m.goto(URL0 + '#' + v); await m.waitForTimeout(350); const w = await m.evaluate(() => document.documentElement.scrollWidth); if (w > 375) over.push(lang + ':' + v + '=' + w) }
+    for (const v of ['welcome', 'today', 'chat', 'plan', 'focus', 'tutor', 'review', 'stats', 'grades']) { await m.goto(URL0 + '#' + v); await m.waitForTimeout(350); const w = await m.evaluate(() => document.documentElement.scrollWidth); if (w > 375) over.push(lang + ':' + v + '=' + w + ' ' + await m.evaluate(() => [...document.querySelectorAll('body *')].filter(e => { const b = e.getBoundingClientRect(); return b.width && (b.right > 375.5 || b.left < -0.5) }).slice(0, 4).map(e => e.tagName + '#' + e.id + '.' + String(e.className).slice(0, 30) + '[' + Math.round(e.getBoundingClientRect().left) + ',' + Math.round(e.getBoundingClientRect().right) + ']').join('|'))) }
   }
   check('no horizontal overflow at 375px', over.length === 0, over.join(', '));
 
@@ -184,7 +202,7 @@ function sse(text) {
   // 14. accessibility (axe) on landing and app views
   const actx = await b.newContext({ bypassCSP: true, viewport: { width: 1280, height: 900 } }); const a = await actx.newPage();
   await a.goto(URL0); await a.waitForTimeout(800); const axeOut = [];
-  for (const v of ['welcome', 'today', 'plan', 'focus', 'tutor', 'review', 'stats', 'grades']) {
+  for (const v of ['welcome', 'today', 'chat', 'plan', 'focus', 'tutor', 'review', 'stats', 'grades']) {
     if (v === 'today') await a.evaluate(() => { const s = JSON.parse(localStorage.getItem('studyplan.v1') || '{}'); s.onboarded = true; localStorage.setItem('studyplan.v1', JSON.stringify(s)) });
     await a.goto(URL0 + '#' + v); await a.waitForTimeout(500);
     const r = await a.evaluate(AXE + ';axe.run(document,{resultTypes:["violations"]}).then(r=>r.violations.filter(v=>v.impact==="serious"||v.impact==="critical").map(v=>v.id+"("+v.nodes.length+")"))');

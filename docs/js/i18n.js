@@ -298,3 +298,59 @@ Object.assign(T.en,{
  quotes:["Whoever strives, succeeds; whoever sows, reaps.","Resolve rises to the measure of the resolute. (al-Mutanabbi)","Heights are reached by effort; who seeks them stays up at night.","Learning young is carving in stone.","Small and steady beats big and broken.","Start with your hardest course while your energy is highest.","Explain it out loud. Where you stumble is what to review.","Past papers are the best guide to what's coming.","Sleep is part of studying, not time lost from it.","25 fully focused minutes beat an hour of distraction."],
  owlSay:["A small step today beats none.","I'm here. Shall we start the first session?","Review your cards before bed; memory sets while you sleep.","Well done! Keep this rhythm."]
 });
+
+T.ar.nav.chat="اسأل نبيه"; T.en.nav.chat="Ask Nabeeh";
+T.ar.feats=T.ar.feats.slice(); T.ar.feats[3]=["اسأل نبيه","مساعد محادثة يجيبك بإجابات منظّمة ودقيقة خطوة بخطوة، ويعرف موادك ومواعيد امتحاناتك."];
+T.en.feats=T.en.feats.slice(); T.en.feats[3]=["Ask Nabeeh","A chat assistant that answers in clear, accurate steps and knows your courses and exam dates."];
+Object.assign(T.ar,{
+ chatH:"اسأل نبيه", chatLede:"مساعدك الدراسي: اسأله عن أي درس، أو عن خطتك وامتحاناتك، أو كيف تستخدم الموقع. يجيبك بإجابات منظّمة خطوة بخطوة.",
+ chatModeAI:"متصل بالذكاء الاصطناعي", chatModeLocal:"الوضع الأساسي (بدون ذكاء اصطناعي)", chatFiles:"استخدم ملفاتي من صفحة المعلّم", chatClear:"امسح المحادثة", chatSend:"أرسل",
+ chatPh:"اكتب سؤالك هنا… (Enter للإرسال، Shift+Enter لسطر جديد)", chatNote:"قد يخطئ الذكاء الاصطناعي، فتحقّق من المعلومات المهمة في كتابك أو مع أستاذك.", chatCopy:"انسخ", copied2:"نُسخت الإجابة",
+ chatHello:function(n){return "أهلاً"+(n?" يا "+n:"")+"! أنا نبيه. اسألني عن أي درس، أو اكتب «ماذا أذاكر اليوم؟»."},
+ chatSug:["ماذا أذاكر اليوم؟","متى امتحاني القادم؟","كم جاهزيتي في موادي؟","اشرح لي اختبار الفرضيات خطوة بخطوة","أنا متوتر من الامتحان","كيف أستخدم البطاقات؟"],
+ lrHello:"أهلاً! أنا نبيه، مساعدك في المذاكرة.",
+ lrCan:["أخبرك ماذا تذاكر اليوم، ومتى امتحاناتك، وكم جاهزيتك في كل مادة","أشرح لك كيف تستخدم أي أداة في الموقع","أبحث لك في ملفات مادتك (الصقها أو ارفعها في صفحة المعلّم وفعّل «استخدم ملفاتي»)","أعطيك خطوات عملية للتعامل مع توتر الامتحانات","وإذا كان المعلّم الذكي مفعّلاً، أجيبك عن أي سؤال دراسي بشرح كامل"],
+ lrStress:"## توتر الامتحان طبيعي، وهذه خطوات تساعدك الآن\n1. **تنفّس ببطء:** شهيق 4 ثوانٍ، حبس 4، زفير 4، وكرّرها 4 مرات.\n2. **قسّم المهمة:** ابدأ جلسة تركيز واحدة مدتها 25 دقيقة على أسهل جزء.\n3. **نَم جيداً:** 7 إلى 8 ساعات تثبّت ما ذاكرته أكثر من السهر.\n4. **راجع ولا تبدأ جديداً:** في آخر يومين ركّز على دفتر أخطائك وبطاقاتك.\n5. **تحدّث مع شخص تثق به** إذا شعرت أن التوتر أكبر من قدرتك.\n\nإذا راودتك أفكار بإيذاء نفسك، تواصل فوراً مع شخص تثق به أو مع خدمات الطوارئ في بلدك.",
+ lrNoPlan:"لم تبنِ خطتك بعد. افتح صفحة «الخطة» وأضف موادك ومواعيد امتحاناتها، وسأخبرك بعدها بما تذاكره كل يوم.",
+ lrToday:"## جلساتك المتبقية اليوم", lrTodayTip:"ابدأ بالأولى من «غرفة التركيز» وعلّمها منجزة بعد الانتهاء.",
+ lrExams:"## امتحاناتك القادمة", lrReady:"## جاهزيتك في كل مادة", lrWeakest:function(n){return "أضعف مادة الآن «"+n+"»، فابدأ بها اليوم."},
+ lrFromNotes:"## أقرب ما وجدته في ملفاتك", lrNotesNote:"هذه جمل من ملفك كما وردت. للشرح الكامل فعّل المعلّم الذكي.",
+ lrFallback:"لا أستطيع الإجابة عن الأسئلة الدراسية العامة في الوضع الأساسي. فعّل المعلّم الذكي من صفحة «المعلّم» لتحصل على إجابة كاملة، أو الصق ملف مادتك هناك لأبحث لك فيه. ما أستطيع فعله الآن:",
+ help:[
+  {k:"خطة|خطتي|جدول|توزيع|plan|schedule",a:"## الخطة\n1. افتح «الخطة» وأضف كل مادة مع تاريخ امتحانها وعدد فصولها وصعوبتها.\n2. اختر ساعاتك اليومية ويوم راحتك، ثم اضغط «ابنِ خطتي».\n3. علّم كل جلسة بعد إنجازها، وإذا فاتك يوم اضغط «وزّع ما فاتني».\n4. صدّر الخطة إلى تقويم Google من زر «صدّر إلى التقويم»."},
+  {k:"تركيز|بومودورو|مؤقت|focus|pomodoro|timer",a:"## غرفة التركيز\n- اختر المادة ونمط الجلسة (25/5 أو 50/10 أو 90/15) ثم «ابدأ».\n- شغّل صوت مطر أو أمواج ليعزلك عن الضجيج.\n- كل دقيقة تُسجَّل لمادتها وتظهر في «إنجازي» وفي مؤشر الجاهزية."},
+  {k:"بطاق|مراجعة|flash|card|review",a:"## البطاقات\n- أضف سؤالاً وجوابه من صفحة «المراجعة»، أو ولّدها تلقائياً من ملفك في «المعلّم».\n- اضغط «ابدأ مراجعة اليوم»، اقلب البطاقة، وقيّم نفسك.\n- ما تعرفه يتباعد حتى أسبوعين، وما تخطئ فيه يعود اليوم."},
+  {k:"خطأ|أخطاء|اخطاء|دفتر|mistake",a:"## دفتر الأخطاء\nكل سؤال تخطئ فيه في اختبارات «المعلّم» يُحفظ في «المراجعة» مع الجواب الصحيح وسببه. حوّله إلى بطاقة بضغطة، وراجعه قبل الامتحان."},
+  {k:"نسخ|احتياط|انقل|جهاز آخر|backup|export|import",a:"## نقل بياناتك\nمن «إنجازي» اضغط «نزّل نسخة احتياطية»، ثم «استرجع نسخة» على الجهاز الآخر. بياناتك محفوظة في متصفحك فقط."},
+  {k:"صلاة|أذان|اذان|prayer",a:"## أوقات الصلاة\nفعّلها من «إنجازي» ← ملفك. تظهر الصلاة القادمة في «اليوم»، وتتوقف جلسة التركيز تلقائياً عند حلول الوقت. الأوقات حسابات فلكية تقريبية."},
+  {k:"مفتاح|api|key|تفعيل الذكاء",a:"## تفعيل المعلّم الذكي\nمن صفحة «المعلّم» أدخل مفتاح Claude API الخاص بك واضغط «فعّل». المفتاح يبقى في متصفحك، والاستهلاك على حسابك في Anthropic."},
+  {k:"معدل|علام|gpa|grade",a:"## العلامات\nفي صفحة «العلامات» احسب ما تحتاجه في النهائي لتصل إلى هدفك، واحسب معدلك الفصلي والتراكمي."},
+  {k:"تثبيت|تطبيق|بدون انترنت|بدون إنترنت|install|offline",a:"## ثبّته كتطبيق\nمن قائمة المتصفح اختر «إضافة إلى الشاشة الرئيسية». بعد أول زيارة يعمل الموقع بدون إنترنت."}
+ ]
+});
+Object.assign(T.en,{
+ chatH:"Ask Nabeeh", chatLede:"Your study assistant: ask about any lesson, your plan and exams, or how to use the site. Answers come in clear, organised steps.",
+ chatModeAI:"Connected to AI", chatModeLocal:"Basic mode (no AI)", chatFiles:"Use my files from the Tutor page", chatClear:"Clear chat", chatSend:"Send",
+ chatPh:"Type your question… (Enter to send, Shift+Enter for a new line)", chatNote:"AI can make mistakes, so check important facts in your textbook or with your teacher.", chatCopy:"Copy", copied2:"Answer copied",
+ chatHello:function(n){return "Hi"+(n?" "+n:"")+"! I'm Nabeeh. Ask me about any lesson, or type “What should I study today?”."},
+ chatSug:["What should I study today?","When is my next exam?","How ready am I in my courses?","Explain hypothesis testing step by step","I'm stressed about the exam","How do I use flashcards?"],
+ lrHello:"Hi! I'm Nabeeh, your study assistant.",
+ lrCan:["Tell you what to study today, when your exams are and how ready you are","Explain how to use any tool on the site","Search your course files (paste or upload them on the Tutor page and tick “Use my files”)","Give practical steps for exam stress","With the AI tutor on, answer any study question in full"],
+ lrStress:"## Exam stress is normal. These steps help right now\n1. **Breathe slowly:** in for 4, hold for 4, out for 4, four times.\n2. **Shrink the task:** do one 25-minute focus session on the easiest part.\n3. **Sleep:** 7 to 8 hours locks in what you studied better than staying up.\n4. **Review, don't start new:** in the last two days focus on your mistake notebook and cards.\n5. **Talk to someone you trust** if it feels bigger than you can handle.\n\nIf you have thoughts of harming yourself, contact someone you trust or your local emergency services right away.",
+ lrNoPlan:"You haven't built your plan yet. Open Plan, add your courses and exam dates, and I'll tell you what to study each day.",
+ lrToday:"## Sessions left today", lrTodayTip:"Start the first one from the Focus room and tick it off when you finish.",
+ lrExams:"## Your upcoming exams", lrReady:"## Your readiness per course", lrWeakest:function(n){return "Your weakest course right now is “"+n+"”. Start with it today."},
+ lrFromNotes:"## Closest matches in your files", lrNotesNote:"These are sentences from your file as written. Turn on the AI tutor for a full explanation.",
+ lrFallback:"In basic mode I can't answer general study questions. Turn on the AI tutor on the Tutor page for a full answer, or paste your course file there and I'll search it. What I can do now:",
+ help:[
+  {k:"plan|schedule|timetable",a:"## Your plan\n1. Open Plan and add each course with its exam date, chapters and difficulty.\n2. Choose your daily hours and day off, then press “Build my plan”.\n3. Tick each session when done; if you miss a day, press “Reschedule missed work”.\n4. Export to Google Calendar with “Export to calendar”."},
+  {k:"focus|pomodoro|timer",a:"## Focus room\n- Pick the course and a session style (25/5, 50/10 or 90/15), then Start.\n- Play rain or waves to shut out noise.\n- Every minute is logged to its course and shows in Progress and in readiness."},
+  {k:"flash|card|review",a:"## Flashcards\n- Add a question and answer on Review, or generate cards from your file on Tutor.\n- Press “Start today's review”, flip the card and rate yourself.\n- Cards you know spread out to two weeks; cards you miss come back today."},
+  {k:"mistake|notebook",a:"## Mistake notebook\nEvery question you miss in Tutor quizzes is saved on Review with the right answer and why. Turn it into a card in one tap and review it before the exam."},
+  {k:"backup|export|import|another device",a:"## Moving your data\nOn Progress press “Download backup”, then “Restore backup” on the other device. Your data lives only in your browser."},
+  {k:"prayer",a:"## Prayer times\nTurn them on in Progress → Your profile. The next prayer shows on Today, and a focus session pauses when it's time. Times are approximate calculations."},
+  {k:"api|key|turn on ai",a:"## Turning on the AI tutor\nOn the Tutor page enter your own Claude API key and press “Turn on”. The key stays in your browser; usage is billed to your Anthropic account."},
+  {k:"gpa|grade",a:"## Grades\nOn Grades, work out what you need on the final and your semester and cumulative GPA."},
+  {k:"install|offline|app",a:"## Install it as an app\nUse your browser menu → “Add to Home screen”. After your first visit it works offline."}
+ ]
+});

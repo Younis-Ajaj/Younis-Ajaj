@@ -6,8 +6,8 @@ if(IS_WEB&&window.top!==window.self){try{window.top.location.href=window.locatio
 var KEY="studyplan.v1";
 var HL=["--hl1","--hl2","--hl3","--hl4","--hl5","--hl6"];
 var GAP=[1,0.6,0.3], HPC=[1.5,2.5,3.5], OFFSET=[0,0.25,0.5];
-var VIEWS=["today","plan","focus","tutor","review","stats","grades"];
-var ICON={today:"i-today",plan:"i-plan",focus:"i-focus",tutor:"i-tutor",review:"i-review",stats:"i-stats",grades:"i-grades"};
+var VIEWS=["today","chat","plan","focus","tutor","review","stats","grades"];
+var ICON={chat:"i-chat",today:"i-today",plan:"i-plan",focus:"i-focus",tutor:"i-tutor",review:"i-review",stats:"i-stats",grades:"i-grades"};
 var $=function(id){return document.getElementById(id)};
 var qa=function(sel,root){return [].slice.call((root||document).querySelectorAll(sel))};
 
@@ -57,7 +57,7 @@ function push(){
 function normalize(){
   var d={subjects:[],scores:[],cards:[],mistakes:[],done:{},active:{},log:{},bank:{},focusBy:{},badges:{},
     tutor:{major:"",course:"",topic:""},grade:{now:"",fin:"40"},gpa:{rows:[],prev:"",prevH:"",target:""},
-    cnt:{sessions:0,cardsMade:0,perfect:0,maps:0,mistRev:0,fey:0},profile:{},eve:{}};
+    cnt:{sessions:0,cardsMade:0,perfect:0,maps:0,mistRev:0,fey:0},profile:{},eve:{},chat:[]};
   Object.keys(d).forEach(function(k){
     var v=state[k];
     if(Array.isArray(d[k])){if(!Array.isArray(v)) state[k]=d[k]}

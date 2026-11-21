@@ -1,8 +1,9 @@
 """Builds the standalone website (GitHub Pages) into /home/user/Younis-Ajaj/docs from the shared source parts."""
 import json, os, re, pathlib
 
-SRC = pathlib.Path(__file__).parent
-OUT = SRC.parent / "docs"
+BASE = pathlib.Path(__file__).parent
+SRC = BASE / "src"
+OUT = BASE.parent / "docs"
 (OUT / "js").mkdir(parents=True, exist_ok=True)
 (OUT / "icons").mkdir(parents=True, exist_ok=True)
 
@@ -12,15 +13,34 @@ def read(name):
 def strip_script_tags(js):
     return "\n".join(l for l in js.split("\n") if l.strip() not in ("<script>", "</script>"))
 
-CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-       "font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://api.anthropic.com; "
+CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+       "font-src 'self'; img-src 'self' data: blob:; connect-src 'self' https://api.anthropic.com; "
        "worker-src 'self' blob:; manifest-src 'self'; media-src 'self' blob:; object-src 'none'; "
        "base-uri 'none'; form-action 'none'; upgrade-insecure-requests")
 
 DESC = "نبيه: منصة مذاكرة عربية مجانية. خطة يومية تُبنى على موادك، غرفة تركيز، مراجعة متباعدة، دفتر أخطاء، ومواقيت الصلاة."
 
-fonts = "\n".join(l for l in read("00-head.html").split("\n") if "fonts.g" in l)
-body = read("20-body.html").replace('<div class="shell">', read("25-landing.html") + '\n<div class="shell">', 1)
+fonts = '<link rel="preload" href="fonts/lalezar-arabic-400-normal.woff2" as="font" type="font/woff2" crossorigin>\n<link rel="preload" href="fonts/readex-pro-arabic-400-normal.woff2" as="font" type="font/woff2" crossorigin>\n<link rel="stylesheet" href="fonts/fonts.css">'
+import shutil as _sh
+_sh.rmtree(OUT / "fonts", ignore_errors=True)
+_sh.copytree(BASE / "fonts", OUT / "fonts")
+body = read("20-body.html").replace('<div class="shell" hidden>', read("25-landing.html") + '\n<div class="shell" hidden>', 1)
+
+
+# pre-fill Arabic text so the first paint is complete (better speed, layout stability and SEO)
+import subprocess
+_i18n = strip_script_tags(read("30-i18n.js") + read("35-i18n2.js"))
+_js = _i18n + "\nconst o={};for(const k in T.ar){if(typeof T.ar[k]==='string')o[k]=T.ar[k]}process.stdout.write(JSON.stringify(o));"
+AR = json.loads(subprocess.run(["node", "-e", _js], capture_output=True, text=True, check=True).stdout)
+import html as _html
+def _fill(m):
+    key = m.group(2)
+    return m.group(1) + _html.escape(AR[key], quote=False) + m.group(3) if key in AR else m.group(0)
+body = re.sub(r'(<[a-z0-9]+\b[^>]*\sdata-t="([A-Za-z0-9_]+)"[^>]*>)(</)', _fill, body)
+def _ph(m):
+    key = m.group(2)
+    return m.group(1) + ' placeholder="' + _html.escape(AR[key]) + '"' if key in AR else m.group(1)
+body = re.sub(r'(<(?:input|textarea)\b[^>]*\sdata-tp="([A-Za-z0-9_]+)")', _ph, body)
 
 head = f"""<!doctype html>
 <html lang="ar" dir="rtl">
@@ -43,16 +63,16 @@ head = f"""<!doctype html>
 <style>:root{{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}}body{{margin:0}}img{{max-width:100%}}[hidden]{{display:none!important}}</style>
 """
 html = (head + read("10-style.css") + read("15-style2.css") + "</head>\n<body>\n" + body +
-        '<script src="js/i18n.js"></script>\n<script src="js/web.js"></script>\n<script src="js/app.js"></script>\n</body>\n</html>\n')
+        '<script defer src="js/i18n.js"></script>\n<script defer src="js/web.js"></script>\n<script defer src="js/app.js"></script>\n</body>\n</html>\n')
 (OUT / "index.html").write_text(html, encoding="utf8")
 
 (OUT / "js" / "i18n.js").write_text(strip_script_tags(read("30-i18n.js") + read("35-i18n2.js")), encoding="utf8")
-app = "".join(read(f) for f in ["40-core.js", "50-plan.js", "60-today.js", "70-tutor.js", "75-site.js", "77-ai.js", "80-rest.js"])
+app = "".join(read(f) for f in ["40-core.js", "50-plan.js", "60-today.js", "70-tutor.js", "75-site.js", "77-ai.js", "78-chat.js", "80-rest.js"])
 (OUT / "js" / "app.js").write_text(strip_script_tags(app), encoding="utf8")
 
 web = r'''window.IS_WEB_SITE=true;
-T.ar.feats=T.ar.feats.slice(); T.ar.feats[3]=["ملخّص من ملفاتك","ارفع PDF أو Word أو PowerPoint فيستخرج أهم الجمل والمصطلحات داخل متصفحك."]; T.ar.feats[4]=["اختبار من ملفك","أسئلة إكمال فراغ تُولَّد من ملفك، تُصحَّح فوراً وتذهب أخطاؤك إلى دفترك."];
-T.en.feats=T.en.feats.slice(); T.en.feats[3]=["Summaries from your files","Upload a PDF, Word or PowerPoint file and get its key sentences and terms, inside your browser."]; T.en.feats[4]=["Quizzes from your file","Fill-in-the-blank questions built from your file, graded instantly, with mistakes sent to your notebook."];
+T.ar.feats=T.ar.feats.slice(); T.ar.feats[3]=["اسأل نبيه","مساعد محادثة يعرف خطتك وامتحاناتك ويبحث في ملفاتك، ومع مفتاحك يجيب عن أي سؤال دراسي بإجابات منظّمة."]; T.ar.feats[4]=["اختبار من ملفك","أسئلة إكمال فراغ تُولَّد من ملفك، تُصحَّح فوراً وتذهب أخطاؤك إلى دفترك."];
+T.en.feats=T.en.feats.slice(); T.en.feats[3]=["Ask Nabeeh","A chat assistant that knows your plan and exams, searches your files, and with your key answers any study question in clear steps."]; T.en.feats[4]=["Quizzes from your file","Fill-in-the-blank questions built from your file, graded instantly, with mistakes sent to your notebook."];
 Object.assign(T.ar,{l_sub:"خطة مذاكرة يوماً بيوم تُبنى على موادك أنت، غرفة تركيز بأصوات هادئة، ملخصات واختبارات من ملفاتك، ومراجعة تثبّت المعلومة حتى يوم الامتحان.",tutorLede:"ارفع ملفات مادتك أو الصق المحتوى، واحصل على أهم ما فيه واختبار منه داخل متصفحك. وإذا فعّلت المعلّم الذكي بمفتاحك، يُرسل ما تطلب شرحه أو تحليله إلى Anthropic فقط."});
 Object.assign(T.en,{l_sub:"A day-by-day study plan built on your own courses, a calm focus room, summaries and quizzes from your files, and review that makes it stick until exam day.",tutorLede:"Upload your course files or paste the content, and get its key points and a quiz from it inside your browser. If you turn on the AI tutor with your key, what you ask it to explain or analyse is sent to Anthropic only."});
 Object.assign(T.ar,{
@@ -72,7 +92,7 @@ Object.assign(T.en,{
 '''
 (OUT / "js" / "web.js").write_text(web, encoding="utf8")
 
-assets = ["./", "./index.html", "./js/i18n.js", "./js/web.js", "./js/app.js", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png"]
+assets = ["./", "./index.html", "./js/i18n.js", "./js/web.js", "./js/app.js", "./manifest.webmanifest", "./fonts/fonts.css", "./icons/icon-192.png", "./icons/icon-512.png"]
 import hashlib
 ver = hashlib.sha256((html + (OUT / "js" / "app.js").read_text(encoding="utf8") + (OUT / "js" / "i18n.js").read_text(encoding="utf8") + web).encode("utf8")).hexdigest()[:10]
 sw = """const CACHE="nabeeh-%s";
