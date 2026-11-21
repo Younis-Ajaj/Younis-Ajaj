@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Register for the DataPath Jordan community or send the team a message.">
+  <title>Join Us | DataPath Jordan</title>
+  <link rel="icon" href="images/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="logo" href="index.html">
+        <img src="images/logo.svg" alt="DataPath Jordan logo" width="38" height="38">
+        <span class="logo-text">Data<span>Path</span></span>
+      </a>
+      <input type="checkbox" id="nav-toggle" class="nav-toggle">
+      <label for="nav-toggle" class="nav-toggle-label" aria-label="Open menu">&#9776;</label>
+      <nav class="main-nav" aria-label="Main navigation">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="roadmap.html">Roadmap</a></li>
+          <li><a href="resources.html">Resources</a></li>
+          <li><a href="events.html">Events</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="contact.html" class="active" aria-current="page">Join Us</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="page-banner">
+      <div class="container">
+        <p class="breadcrumb"><a href="index.html">Home</a> &rsaquo; Join Us</p>
+        <h1>Join the Community</h1>
+        <p>Register to receive study partners, event reminders and the full roadmap checklist.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container grid grid-2">
+        <div class="card form-card">
+          <h2>Registration form</h2>
+          <form action="#" method="post">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="fname">First name <span class="required">*</span></label>
+                <input type="text" id="fname" name="fname" required placeholder="e.g. Ahmad">
+              </div>
+              <div class="form-group">
+                <label for="lname">Last name <span class="required">*</span></label>
+                <input type="text" id="lname" name="lname" required placeholder="e.g. Khaled">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="email">University email <span class="required">*</span></label>
+                <input type="email" id="email" name="email" required placeholder="name@student.ammanu.edu.jo">
+              </div>
+              <div class="form-group">
+                <label for="phone">Phone</label>
+                <input type="tel" id="phone" name="phone" placeholder="07X XXX XXXX">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="major">Major</label>
+                <select id="major" name="major">
+                  <option value="ds-ai">Data Science &amp; AI</option>
+                  <option value="cs">Computer Science</option>
+                  <option value="se">Software Engineering</option>
+                  <option value="cyber">Cybersecurity</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="year">Study year</label>
+                <input type="number" id="year" name="year" min="1" max="5" value="2">
+              </div>
+            </div>
+            <fieldset>
+              <legend>Current level</legend>
+              <div class="check-list">
+                <label><input type="radio" name="level" value="beginner" checked> Beginner</label>
+                <label><input type="radio" name="level" value="intermediate"> Intermediate</label>
+                <label><input type="radio" name="level" value="advanced"> Advanced</label>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Interested in</legend>
+              <div class="check-list">
+                <label><input type="checkbox" name="interest" value="workshops"> Workshops</label>
+                <label><input type="checkbox" name="interest" value="circles"> Study circles</label>
+                <label><input type="checkbox" name="interest" value="hackathons"> Hackathons</label>
+                <label><input type="checkbox" name="interest" value="mentoring"> Mentoring</label>
+              </div>
+            </fieldset>
+            <div class="form-group">
+              <label for="message">Message (optional)</label>
+              <textarea id="message" name="message" placeholder="Tell us what you want to learn..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Register</button>
+            <p class="form-note">Fields marked <span class="required">*</span> are required. Full validation is added in Phase II.</p>
+          </form>
+        </div>
+
+        <div>
+          <h2>Contact details</h2>
+          <ul class="contact-info">
+            <li><strong>Location</strong>Faculty of Information Technology, Al-Ahliyya Amman University, Al-Salt Road, Amman</li>
+            <li><strong>Email</strong><a href="mailto:datapath.team@example.com">datapath.team@example.com</a></li>
+            <li><strong>Office hours</strong>Sunday &ndash; Thursday, 10:00 &ndash; 14:00</li>
+          </ul>
+
+          <h2 id="faq" style="margin-top:36px">FAQ</h2>
+          <details class="card" style="margin-bottom:12px">
+            <summary><strong>Is DataPath really free?</strong></summary>
+            <p>Yes. All resources we list are free, and events are run by student volunteers.</p>
+          </details>
+          <details class="card" style="margin-bottom:12px">
+            <summary><strong>Do I need to be a Data Science student?</strong></summary>
+            <p>No. Any student interested in data and AI can join.</p>
+          </details>
+          <details class="card">
+            <summary><strong>Where do I start?</strong></summary>
+            <p>Begin with Stage 1 of the <a href="roadmap.html">roadmap</a>.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a class="logo" href="index.html">
+            <img src="images/logo.svg" alt="" width="38" height="38">
+            <span class="logo-text">Data<span>Path</span></span>
+          </a>
+          <p>A free learning hub that guides Jordanian university students from their first line of Python to their first job in Data Science &amp; AI.</p>
+        </div>
+        <div>
+          <h4>Explore</h4>
+          <ul>
+            <li><a href="roadmap.html">Learning Roadmap</a></li>
+            <li><a href="resources.html">Resource Library</a></li>
+            <li><a href="events.html">Events &amp; Workshops</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Community</h4>
+          <ul>
+            <li><a href="about.html">About the Team</a></li>
+            <li><a href="contact.html">Join / Contact</a></li>
+            <li><a href="contact.html#faq">FAQ</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 DataPath Jordan &mdash; Student project, Internet Applications Development (1), Al-Ahliyya Amman University.</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
