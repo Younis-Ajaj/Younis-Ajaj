@@ -63,6 +63,7 @@
           </div>
         </div>
         <div class="kpis" style="margin-top:16px" id="kpis"></div>
+        <div class="sheet" id="insBox" style="margin-top:16px" hidden></div>
         <div class="grid split" style="margin-top:16px">
           <div class="sheet">
             <div class="row c" style="justify-content:space-between"><h3 data-t="todayH"></h3><a class="btn sm ghost" href="#plan" data-t="openPlan"></a></div>
@@ -142,12 +143,12 @@
             <button class="btn primary big" id="fStart" type="button"></button>
             <button class="btn" id="fReset" type="button" data-t="fReset"></button>
             <button class="btn" id="fSkip" type="button" data-t="fSkip"></button>
-            <button class="iconbtn" id="fFull" type="button" style="background:transparent;border-color:rgba(255,255,255,.3);color:inherit"><svg><use href="#i-max"/></svg></button>
+            <button class="iconbtn" id="fFull" type="button" data-ta="aFull" style="background:transparent;border-color:rgba(255,255,255,.3);color:inherit"><svg><use href="#i-max"/></svg></button>
           </div>
           <p class="tip soft" id="fTip"></p>
           <h3 style="margin:22px 0 10px" data-t="soundH"></h3>
           <div class="sounds" id="sounds"></div>
-          <div class="row c" style="margin-top:12px"><span class="soft small" data-t="vol"></span><div class="field"><input type="range" id="vol" min="0" max="1" step="0.05" value="0.5"></div></div>
+          <div class="row c" style="margin-top:12px"><span class="soft small" data-t="vol"></span><div class="field"><input type="range" id="vol" min="0" max="1" step="0.05" value="0.5" data-ta="vol"></div></div>
         </div>
         <div class="grid g2" style="margin-top:16px">
           <div class="sheet"><h3 data-t="fTodayH"></h3><div class="kpis" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-top:10px" id="fStats"></div></div>
@@ -159,6 +160,7 @@
       <section class="view" id="v-tutor">
         <header class="vhead"><h1 class="display"><span data-t="tutorH"></span></h1><p data-t="tutorLede"></p></header>
         <div id="tutor">
+          <div class="sheet tape mint" id="aiKeyBox" hidden style="margin-bottom:16px"></div>
           <p class="banner" id="tutorNote" data-t="tutorCheck"></p>
           <div class="sheet tape pink">
             <div class="row ai-only">
@@ -171,9 +173,9 @@
               <div class="field" style="flex-grow:2"><label for="tTopic" data-t="topic"></label><input type="text" id="tTopic" data-tp="topicP" autocomplete="off"></div>
             </div>
             <div style="margin-top:12px"><label for="tFile" data-t="fileL"></label><input type="file" id="tFile" multiple accept=".pdf,.docx,.pptx,.xlsx,.txt,.md,.csv"><p class="soft small" id="fileMsg" style="margin:4px 0 0" aria-live="polite"></p></div>
-            <div style="margin-top:10px"><div class="row c" style="justify-content:space-between"><label for="tNotes" data-t="notesL" style="margin:0"></label><button class="mic" type="button" data-mic="tNotes" hidden><svg><use href="#i-mic"/></svg></button></div><textarea id="tNotes" style="margin-top:5px"></textarea></div>
+            <div style="margin-top:10px"><div class="row c" style="justify-content:space-between"><label for="tNotes" data-t="notesL" style="margin:0"></label><button class="mic" type="button" data-ta="aMic" data-mic="tNotes" hidden><svg><use href="#i-mic"/></svg></button></div><textarea id="tNotes" style="margin-top:5px"></textarea></div>
             <div class="tools" id="tools"></div>
-            <div class="row c ai-only" style="margin-top:12px"><label class="row c" style="gap:8px;margin:0;color:var(--ink)"><input type="checkbox" id="examMode"><span data-t="examMode"></span></label><select id="examMin" style="width:auto;min-height:38px"><option value="10">10</option><option value="15" selected>15</option><option value="25">25</option><option value="40">40</option></select><span class="soft small" data-t="minutes"></span></div>
+            <div class="row c ai-only" style="margin-top:12px"><label class="row c" style="gap:8px;margin:0;color:var(--ink)"><input type="checkbox" id="examMode"><span data-t="examMode"></span></label><select id="examMin" style="width:auto;min-height:38px" data-ta="minutes"><option value="10">10</option><option value="15" selected>15</option><option value="25">25</option><option value="40">40</option></select><span class="soft small" data-t="minutes"></span></div>
           </div>
           <p class="error" id="tError" role="alert" hidden></p>
           <div class="sheet" id="tutorPanel" hidden style="margin-top:16px">
@@ -182,13 +184,13 @@
             <div id="tutorExtra"></div>
             <div id="askRow" hidden style="margin-top:14px">
               <label for="tAsk" data-t="askL"></label>
-              <div class="row c"><div class="field"><input type="text" id="tAsk" autocomplete="off"></div><button class="mic" type="button" data-mic="tAsk" hidden><svg><use href="#i-mic"/></svg></button><button class="btn sm primary" type="button" id="tAskBtn" data-t="ask"></button></div>
+              <div class="row c"><div class="field"><input type="text" id="tAsk" autocomplete="off"></div><button class="mic" type="button" data-ta="aMic" data-mic="tAsk" hidden><svg><use href="#i-mic"/></svg></button><button class="btn sm primary" type="button" id="tAskBtn" data-t="ask"></button></div>
             </div>
           </div>
           <div class="sheet" id="feyBox" hidden style="margin-top:16px">
             <h3 data-t="feyH"></h3>
             <p class="soft small" style="margin:4px 0 10px" data-t="feyLede"></p>
-            <div class="row c" style="justify-content:flex-end"><button class="mic" type="button" data-mic="feyIn" hidden><svg><use href="#i-mic"/></svg></button></div>
+            <div class="row c" style="justify-content:flex-end"><button class="mic" type="button" data-ta="aMic" data-mic="feyIn" hidden><svg><use href="#i-mic"/></svg></button></div>
             <textarea id="feyIn" style="margin-top:6px"></textarea>
             <div class="actions" style="margin-top:10px"><button class="btn sm primary" id="feyGo" type="button" data-t="feyGo"></button></div>
             <div id="feyOut"></div>
@@ -207,7 +209,7 @@
             <div id="cIdle">
               <p id="cInfo" style="margin:0"></p>
               <div class="boxes" id="cBoxes"></div>
-              <div class="actions" style="margin-top:14px"><button class="btn primary" id="cStart" type="button" data-t="cStart"></button><select id="cFilter" style="width:auto;min-height:44px"></select></div>
+              <div class="actions" style="margin-top:14px"><button class="btn primary" id="cStart" type="button" data-t="cStart"></button><select id="cFilter" style="width:auto;min-height:44px" data-ta="cFilterL"></select></div>
             </div>
             <div id="cReview" hidden>
               <div class="row c" style="justify-content:space-between"><span class="soft small" id="cLeft"></span><button class="link" id="cEnd" type="button" data-t="cEnd"></button></div>
@@ -230,13 +232,15 @@
           </div>
         </div>
         <h2 class="sec"><span data-t="mistH"></span><span class="chip" id="mistCount"></span></h2>
-        <div class="sheet"><p class="soft small" style="margin:0" data-t="mistLede"></p><ul class="mlist" id="mlist"></ul></div>
+        <div class="sheet"><p class="soft small" style="margin:0" data-t="mistLede"></p><div class="actions ai-only" style="margin-top:10px"><button class="btn sm hl" id="mistAIBtn" type="button"><svg><use href="#i-tutor"/></svg><span data-t="mistAI"></span></button></div><div class="out" id="mistAIOut" aria-live="polite"></div><ul class="mlist" id="mlist"></ul></div>
       </section>
 
       <!-- ================= STATS ================= -->
       <section class="view" id="v-stats">
         <header class="vhead"><h1 class="display"><span data-t="statsH"></span></h1><p data-t="statsLede"></p></header>
         <div class="kpis" id="sKpis"></div>
+        <h2 class="sec" data-t="repH"></h2>
+        <div class="sheet tape mint"><p class="soft small" style="margin:0 0 10px" data-t="repLede"></p><div class="actions ai-only"><button class="btn sm hl" id="repBtn" type="button"><svg><use href="#i-tutor"/></svg><span data-t="repBtn"></span></button><button class="btn sm ghost" id="repStop" type="button" hidden data-t="stop"></button></div><p class="soft small noai-only" style="margin:0" id="repNoAI" data-t="repNoAI"></p><div class="out" id="repOut" aria-live="polite"></div></div>
         <h2 class="sec" data-t="heatH"></h2>
         <div class="sheet"><div class="heat"><div class="g" id="heat"></div></div><div class="hkey"><span data-t="less"></span><i style="background:var(--rule)"></i><i style="background:color-mix(in srgb,var(--hl3) 40%,var(--rule))"></i><i style="background:color-mix(in srgb,var(--hl3) 70%,var(--rule))"></i><i style="background:var(--hl3)"></i><i style="background:color-mix(in srgb,var(--hl3) 70%,var(--ink))"></i><span data-t="more"></span></div></div>
         <div class="grid g2" style="margin-top:16px">

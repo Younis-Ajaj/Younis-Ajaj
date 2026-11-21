@@ -193,4 +193,11 @@
   .lnav .brand small{display:none}
   .lnav .btn{white-space:nowrap;padding:6px 10px}
 }
+.noai .ai-only{display:none!important}
+body:not(.noai) .noai-only{display:none!important}
+.ins{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:8px}
+.ins li{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:var(--sheet-2);border:1px solid var(--rule);font-size:.95rem}
+.ins li i{flex:none;width:10px;height:10px;border-radius:50%;margin-top:9px}
+.ins li.warn i{background:var(--warn)}.ins li.ok i{background:var(--ok)}.ins li.info i{background:var(--hl4)}
+.mlist .out{font-size:.92rem;margin:8px 0 0;padding:10px 12px;border-radius:10px;background:var(--sheet);border:1px dashed var(--rule)}
 </style>

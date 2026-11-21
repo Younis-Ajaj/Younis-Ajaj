@@ -3,7 +3,7 @@
 var sample=null, sampleChecked=false, ctl=null, tts=null, dict=null;
 function langRule(){return state.lang==="en"?"Write in English.":"اكتب بالعربية مع إبقاء المصطلحات العلمية بالإنجليزية بين قوسين."}
 var PLAIN="\nPlain text only: no markdown symbols such as asterisks or heading marks.";
-function errCopy(e){var l=L(); return e&&e.code==="rate_limited"?l.eRate:e&&e.code==="invalid_json"?l.eJson:l.eGen}
+function errCopy(e){var l=L(), c=e&&e.code; return c==="rate_limited"?l.eRate:c==="invalid_json"?l.eJson:c==="auth"?l.aiBadKey:c==="refused"?l.aiRefused:c==="network"?l.aiNet:l.eGen}
 $("coachStop").onclick=function(){if(ctl) ctl.abort()};
 $("coachBtn").onclick=function(){
   if(!sample||!current) return;
@@ -380,7 +380,7 @@ function fillTutor(){
   $("tMajor").value=t.major||""; $("tCourse").value=t.course||""; $("tTopic").value=t.topic||""; $("tSchool").value=t.school||""; setLevel(t.level==="school"?"school":"uni"); renderHistory();
 }
 function tutorOff(){
-  sample=null; sampleChecked=true;
+  sample=null; sampleChecked=true; document.body.classList.add("noai");
   $("coach").hidden=true; $("tutor").classList.add("basic");
   $("tutorNote").hidden=false; $("tutorNote").textContent=L().tutorOff;
   if(IS_WEB&&L().webAI) $("tutorNote").insertAdjacentHTML("beforeend",' <a href="https://claude.ai/artifact/TXJqkw8BpsTdVT36RQevMt" target="_blank" rel="noopener noreferrer">'+esc(L().webAI)+'</a>');

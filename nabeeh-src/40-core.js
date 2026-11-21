@@ -67,6 +67,7 @@ function normalize(){
   if(!Array.isArray(state.gpa.rows)) state.gpa.rows=[];
   ["xp","focusMin","bestStreak","fPreset","sound"].forEach(function(k){if(!(state[k]>=0)) state[k]=0});
   if(!(state.vol>=0)) state.vol=0.5;
+  if(!Array.isArray(state.focusHours)||state.focusHours.length!==24) state.focusHours=new Array(24).fill(0);
   state.subjects.forEach(function(x){if(x.id>=nextId) nextId=x.id+1; if(!(x.ch>0)) x.ch=6});
   state.cards.forEach(function(c){if(!(c.box>=0)) c.box=0});
   if(typeof state.onboarded!=="boolean") state.onboarded=!state.demo&&(!!state.built||state.subjects.some(function(s){return s.name&&s.name.trim()}));
@@ -159,7 +160,7 @@ function applyTheme(){
   if(state.theme==="dark"||state.theme==="light") r.setAttribute("data-theme",state.theme); else r.removeAttribute("data-theme");
   var dark=state.theme==="dark"||(!state.theme&&matchMedia("(prefers-color-scheme: dark)").matches);
   $("themeBtn").innerHTML='<svg><use href="#'+(dark?"i-sun":"i-moon")+'"/></svg>';
-  $("themeBtn").setAttribute("aria-label",dark?"Light":"Dark"); $("lTheme").innerHTML=$("themeBtn").innerHTML;
+  $("themeBtn").setAttribute("aria-label",L().aTheme||"Theme"); $("lTheme").innerHTML=$("themeBtn").innerHTML;
 }
 $("themeBtn").onclick=function(){
   var dark=state.theme==="dark"||(!state.theme&&matchMedia("(prefers-color-scheme: dark)").matches);
@@ -194,6 +195,7 @@ function applyLang(){
   document.title=l.title; $("langBtn").textContent=l.lang;
   qa("[data-t]").forEach(function(el){var v=l[el.dataset.t]; if(typeof v==="string") el.textContent=v});
   qa("[data-tp]").forEach(function(el){el.placeholder=l[el.dataset.tp]});
+  qa("[data-ta]").forEach(function(el){var v=l[el.dataset.ta]; if(typeof v==="string") el.setAttribute("aria-label",v)});
   $("sync").textContent=l[syncKey];
 }
 </script>

@@ -47,7 +47,7 @@ function renderToday(){
   $("todayList").innerHTML=day?(day.exams.map(function(s){return '<div class="exam-row">'+l.exam+esc(s.name)+'</div>'}).join("")+day.blocks.map(function(b,bi){return blockHtml(day,b,0,bi)}).join("")||'<p class="soft small" style="margin:0">'+esc(day.off?l.restDay:l.noStudy)+'</p>'):'<p class="soft small" style="margin:0">'+esc(l.noPlan)+'</p>';
   $("dueBox").innerHTML=due?'<p style="margin:0 0 10px">'+esc(l.cInfo(state.cards.length,due))+'</p><a class="btn sm primary" href="#review">'+esc(l.dueGo)+'</a>':'<p class="soft small" style="margin:0">'+esc(l.dueNone)+'</p>';
   $("quote").textContent=l.quotes[(t.getDate()+t.getMonth())%l.quotes.length];
-  renderTodayExtras();
+  renderTodayExtras(); renderInsights();
 }
 onRoute.today=renderToday;
 document.addEventListener("click",function(e){var a=e.target.closest("[data-fsub]"); if(a){fSubPending=+a.dataset.fsub}});
@@ -100,7 +100,8 @@ function fRun(){
 function fPause(){F.left=fLeftNow(); F.running=false; clearInterval(F.tick); try{wake&&wake.release()}catch(e){} wake=null; fPaint()}
 function logFocus(min){
   if(min<1) return;
-  var name=fSubName(); state.focusMin+=min; dayLog().m+=min; state.focusBy[name]=(state.focusBy[name]||0)+min;
+  var name=fSubName(); state.focusMin+=min;
+  if(!Array.isArray(state.focusHours)||state.focusHours.length!==24) state.focusHours=new Array(24).fill(0); state.focusHours[new Date().getHours()]+=min; dayLog().m+=min; state.focusBy[name]=(state.focusBy[name]||0)+min;
   markActive(); addXP(Math.round(min*1.2)); save();
 }
 function fSet(ph){F.phase=ph; F.total=F.left=fPresetLen(ph); F.started=0}

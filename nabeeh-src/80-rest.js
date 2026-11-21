@@ -58,7 +58,7 @@ function renderMistakes(){
   $("mlist").innerHTML=m.length?m.slice(0,30).map(function(x){
     return '<li><div class="q1">'+esc(x.q)+'</div>'+(x.course?'<span class="chip" style="margin-top:4px">'+esc(x.course)+'</span>':'')+
       '<p class="a1">'+esc(l.mistYou)+': <s>'+esc(x.you)+'</s></p><p class="a1">'+esc(l.mistRight)+': <mark>'+esc(x.right)+'</mark></p>'+(x.why?'<p class="a1 soft">'+esc(x.why)+'</p>':'')+
-      '<div class="actions" style="margin-top:8px"><button class="btn sm" type="button" data-mc="'+x.id+'">'+esc(l.mistCard)+'</button><button class="link" type="button" data-md="'+x.id+'">'+esc(l.mistDel)+'</button></div></li>';
+      '<div class="actions" style="margin-top:8px"><button class="btn sm ghost ai-only" type="button" data-mx="'+x.id+'">'+esc(l.mistExplain)+'</button><button class="btn sm" type="button" data-mc="'+x.id+'">'+esc(l.mistCard)+'</button><button class="link" type="button" data-md="'+x.id+'">'+esc(l.mistDel)+'</button></div><p class="out" data-mxo="'+x.id+'" hidden></p></li>';
   }).join(""):'<li class="empty" style="border:0;background:none">'+esc(l.mistNone)+'</li>';
 }
 $("mlist").addEventListener("click",function(e){
@@ -112,7 +112,8 @@ $("wipeNo").onclick=function(){$("wipeAsk").hidden=true};
 $("wipeYes").onclick=function(){
   var lang=state.lang, theme=state.theme;
   state={lang:lang,theme:theme,subjects:[],hours:4,off:-1,done:{},start:null,built:false,updated:Date.now(),scores:[],tutor:{major:"",course:"",topic:""}};
-  normalize(); addSubject(); addSubject(); current=null; save(); $("wipeAsk").hidden=true; $("result").hidden=true; renderAll(); toast(L().wiped);
+  normalize(); addSubject(); addSubject(); current=null; save(); $("wipeAsk").hidden=true;
+  if(IS_WEB){clearKey(); sample=null; tutorOff(); renderAiKey()} $("result").hidden=true; renderAll(); toast(L().wiped);
 };
 
 /* ================= GRADES ================= */
@@ -134,7 +135,7 @@ function renderGpa(full){
   var l=L(), G=state.gpa;
   if(!G.rows.length){state.subjects.filter(function(s){return s.name.trim()}).forEach(function(s){G.rows.push({name:s.name,cr:3,g:"B"})}); if(!G.rows.length) G.rows.push({name:"",cr:3,g:"B"})}
   if(full!==false) $("gpaRows").innerHTML=G.rows.map(function(r,i){
-    return '<div class="gpa-row"><input type="text" data-gi="'+i+'" data-gf="name" value="'+esc(r.name)+'" placeholder="'+esc(l.gpaName)+'" aria-label="'+esc(l.gpaName)+'"><input type="number" min="0" max="12" data-gi="'+i+'" data-gf="cr" value="'+esc(r.cr)+'" aria-label="'+esc(l.gpaCr)+'"><select data-gi="'+i+'" data-gf="g">'+LETTERS.map(function(x){return '<option value="'+x[0]+'"'+(x[0]===r.g?" selected":"")+'>'+x[0]+' · '+x[1].toFixed(1)+'</option>'}).join("")+'</select><button class="x" type="button" data-gx="'+i+'" aria-label="×">×</button></div>';
+    return '<div class="gpa-row"><input type="text" data-gi="'+i+'" data-gf="name" value="'+esc(r.name)+'" placeholder="'+esc(l.gpaName)+'" aria-label="'+esc(l.gpaName)+'"><input type="number" min="0" max="12" data-gi="'+i+'" data-gf="cr" value="'+esc(r.cr)+'" aria-label="'+esc(l.gpaCr)+'"><select data-gi="'+i+'" data-gf="g" aria-label="'+esc(l.aGrade)+'">'+LETTERS.map(function(x){return '<option value="'+x[0]+'"'+(x[0]===r.g?" selected":"")+'>'+x[0]+' · '+x[1].toFixed(1)+'</option>'}).join("")+'</select><button class="x" type="button" data-gx="'+i+'" aria-label="×">×</button></div>';
   }).join("");
   if(full!==false){$("gpaPrev").value=G.prev; $("gpaPrevH").value=G.prevH; $("gpaTarget").value=G.target}
   var pts=0, hrs=0; G.rows.forEach(function(r){var c=+r.cr||0, p=(LETTERS.filter(function(x){return x[0]===r.g})[0]||[0,0])[1]; pts+=c*p; hrs+=c});
@@ -158,11 +159,13 @@ function renderAll(){
   if(state.built&&current) renderResult(false);
   if(quizData&&!quizData.graded) renderQuiz();
   if(!sample&&sampleChecked) tutorOff();
+  renderAiKey(); $("repNoAI").hidden=!IS_WEB;
   if(onRoute[route]) onRoute[route]();
 }
 $("langBtn").onclick=function(){state.lang=state.lang==="en"?"ar":"en"; save(); renderAll(); if(!$("onb").hidden&&O) renderOnb()};
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",applyTheme);
 
+document.body.classList.add("noai");
 var had=load();
 if(!state.subjects.length){addSubject(); addSubject()}
 fSet("focus");
@@ -173,7 +176,7 @@ checkBadges();
 
 if(window.claude&&typeof window.claude.use==="function"){
   window.claude.use("sample").then(function(fn){
-    if(fn){sample=fn; sampleChecked=true; $("coach").hidden=false; $("tutorNote").hidden=true; $("tutor").classList.remove("basic")}
+    if(fn){enableAI(fn)}
     else tutorOff();
   }).catch(tutorOff);
   window.claude.use("tts").then(function(t){if(t) setupTts(t)}).catch(function(){});
@@ -198,6 +201,7 @@ if(window.claude&&typeof window.claude.use==="function"){
   }).catch(function(){});
 }else if(IS_WEB){
   tutorOff(); var wt=webTts(); if(wt) setupTts(wt); var wd=webDict(); if(wd){dict=wd; wireDictation()}
+  renderAiKey(); var savedKey=getKey(); if(savedKey) activateKey(savedKey,false,true);
   if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function(){});
 }else{tutorOff(); $("calBtn").hidden=true; $("expBtn").hidden=true}
 })();
