@@ -221,4 +221,7 @@ input[type=file]{max-width:100%;min-width:0;overflow:hidden;font-size:.85rem}
 .chatform textarea{min-height:54px;flex:1;min-width:0}
 #chatSug button{font-size:.84rem;padding:6px 12px}
 @media (max-width:640px){.chatform{flex-wrap:wrap}.chatform .btn{flex:1}.msg{max-width:94%}}
+.owl.mark .spark,.brandmark .spark{transform-box:fill-box;transform-origin:center;animation:twinkle 3.2s ease-in-out infinite}
+.brandmark{flex:none;filter:drop-shadow(0 4px 10px rgba(21,33,59,.18))}
+.sharePrev img{display:block;width:100%;max-width:320px;border-radius:18px;margin-top:14px;box-shadow:var(--shadow)}
 </style>

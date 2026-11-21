@@ -1,17 +1,7 @@
 <script>
 /* ================= MASCOT ================= */
 function owlSvg(cls,attrs){
-  return '<svg class="owl '+(cls||"")+'" viewBox="0 0 120 132" '+(attrs||"")+' aria-hidden="true">'+
-  '<ellipse class="wingL" cx="26" cy="84" rx="13" ry="26" fill="var(--owl-2)"/><ellipse class="wingR" cx="94" cy="84" rx="13" ry="26" fill="var(--owl-2)"/>'+
-  '<ellipse cx="60" cy="84" rx="36" ry="42" fill="var(--owl)"/><ellipse cx="60" cy="96" rx="23" ry="27" fill="var(--belly)"/>'+
-  '<path d="M50 88l5 4 5-4 5 4 5-4M48 100l6 4 6-4 6 4 6-4" stroke="var(--owl-2)" stroke-width="2" fill="none" stroke-linecap="round"/>'+
-  '<g class="head"><path d="M26 36l4-20 15 11zM94 36l-4-20-15 11z" fill="var(--owl)"/><ellipse cx="60" cy="46" rx="38" ry="30" fill="var(--owl)"/>'+
-  '<circle cx="44" cy="46" r="15" fill="var(--belly)"/><circle cx="76" cy="46" r="15" fill="var(--belly)"/>'+
-  '<circle cx="45" cy="47" r="7" fill="#15213B"/><circle cx="75" cy="47" r="7" fill="#15213B"/><circle cx="47.5" cy="44.5" r="2.4" fill="#fff"/><circle cx="77.5" cy="44.5" r="2.4" fill="#fff"/>'+
-  '<ellipse class="lid" cx="44" cy="46" rx="15.5" ry="15.5" fill="var(--owl-2)"/><ellipse class="lid" cx="76" cy="46" rx="15.5" ry="15.5" fill="var(--owl-2)"/>'+
-  '<path d="M55 58l5 9 5-9z" fill="var(--beak)"/>'+
-  '<path d="M30 19l30-12 30 12-30 12z" fill="#1B2440"/><path d="M43 24v9c10 5 24 5 34 0v-9" fill="#1B2440"/><path d="M89 19v16" stroke="var(--hl1)" stroke-width="2.5"/><circle cx="89" cy="37" r="3.5" fill="var(--hl1)"/></g>'+
-  '<path d="M46 125h10M64 125h10" stroke="var(--beak)" stroke-width="5" stroke-linecap="round"/></svg>';
+  return '<svg class="owl mark '+(cls||"")+'" viewBox="0 0 64 64" '+(attrs||"")+' aria-hidden="true"><rect x="1" y="1" width="62" height="62" rx="17" fill="#18284D" stroke="rgba(255,255,255,.16)" stroke-width="1.5"/><path d="M13 47c11-5 26-5 38-2" stroke="#FFE14D" stroke-width="7" stroke-linecap="round" fill="none"/><path d="M21 16 32 30 43 16M32 30v17" stroke="#FFFFFF" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path class="spark" d="M50 9.5l1.7 4.3 4.3 1.7-4.3 1.7-1.7 4.3-1.7-4.3-4.3-1.7 4.3-1.7z" fill="#7FE3B2"/></svg>';
 }
 function owlCheer(){var o=document.querySelector("#helloOwl .owl"); if(!o) return; o.classList.remove("happy"); void o.getBBox(); o.classList.add("happy"); setTimeout(function(){o.classList.remove("happy")},2200)}
 
@@ -94,7 +84,7 @@ function renderLanding(){
   var list=prayTimes(cityDate(c),c);
   $("mkPray").innerHTML=[0,2,3,4,5].map(function(i){return '<div'+(i===np?' class="nx"':'')+'>'+esc(l.prayNames[i])+'<b>'+hm(list[i],c[9])+'</b></div>'}).join("");
   $("mkQuote").textContent=l.quotes[1];
-  $("ctaOwl").innerHTML=owlSvg(); if(!$("sceneOwl").firstChild) $("sceneOwl").innerHTML=owlSvg("",'x="466" y="212" width="80" height="88"');
+  $("ctaOwl").innerHTML=owlSvg(); if(!$("sceneOwl").firstChild) $("sceneOwl").innerHTML=owlSvg("",'x="472" y="226" width="70" height="70"');
   qa("[data-go-app]").forEach(function(b){b.textContent=state.onboarded?l.openApp:l.startNow});
   $("lLang").textContent=l.lang; $("lTheme").innerHTML=$("themeBtn").innerHTML;
   animateRings($("pvRings")); observeReveal();

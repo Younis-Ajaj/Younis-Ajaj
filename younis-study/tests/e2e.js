@@ -1,4 +1,4 @@
-// End-to-end checks for the Younis study website (docs/), served over HTTP with its real CSP.
+// End-to-end checks for the Younis website (docs/), served over HTTP with its real CSP.
 const { chromium } = require('playwright');
 const http = require('http'); const fs = require('fs'); const path = require('path');
 const ROOT = path.join(__dirname, '..', '..', 'docs');
@@ -84,6 +84,14 @@ function sse(text) {
   await p.click('#missBtn'); await p.waitForTimeout(400);
   check('reschedule clears the banner', !(await p.isVisible('#missBanner')));
   await D();
+  // timetable import (no AI: local parser)
+  await p.click('#impToggle'); await p.fill('#impText', 'إحصاء حيوي 2027-01-10 الساعة 9:00\nالأحد ١٢/١/٢٠٢٧ - الشبكات\nfinal: Physics 15/01/2027');
+  await p.click('#impGo'); await p.waitForTimeout(300);
+  const impN = (await p.$$('#impOut [data-imp]')).length; check('timetable parser finds 3 exams (Arabic digits, weekday, mixed formats)', impN === 3, 'found ' + impN);
+  await p.click('#impAdd'); await p.waitForTimeout(300);
+  const subNames = await p.evaluate(() => JSON.parse(localStorage.getItem('studyplan.v1')).subjects.map(s => s.name + '@' + s.date).join(' | '));
+  check('imported exams added to the plan', /الشبكات@2027-01-12/.test(subNames) && /Physics@2027-01-15/.test(subNames), subNames);
+  await D();
   // chat, basic mode
   await p.evaluate(() => location.hash = 'chat'); await p.waitForTimeout(400);
   check('chat shows basic mode without a key', (await p.textContent('#chatMode')).includes('الأساسي'));
@@ -160,7 +168,10 @@ function sse(text) {
   const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#expBtn')]);
   const file = path.join(require('os').tmpdir(), 'younis-backup-test.json'); await dl.saveAs(file);
   const exported = JSON.parse(fs.readFileSync(file, 'utf8'));
-  check('backup exports state', Array.isArray(exported.subjects) && exported.subjects.length === 3 && !JSON.stringify(exported).includes('sk-ant-'));
+  check('backup exports state', Array.isArray(exported.subjects) && exported.subjects.length >= 3 && !JSON.stringify(exported).includes('sk-ant-'));
+  await D();
+  const [cardDl] = await Promise.all([p.waitForEvent('download'), p.click('#shareBtn')]);
+  check('progress card downloads as a PNG', cardDl.suggestedFilename() === 'younis-progress.png' && await p.isVisible('#sharePrev img'));
   await D();
   // 10. language switch
   await p.click('#langBtn'); await p.waitForTimeout(400);

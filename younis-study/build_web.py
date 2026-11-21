@@ -56,6 +56,7 @@ head = f"""<!doctype html>
 <meta property="og:description" content="{DESC}">
 <meta property="og:type" content="website">
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/logo.svg" type="image/svg+xml">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <title>يونس | منصة المذاكرة الذكية</title>
@@ -67,7 +68,7 @@ html = (head + read("10-style.css") + read("15-style2.css") + "</head>\n<body>\n
 (OUT / "index.html").write_text(html, encoding="utf8")
 
 (OUT / "js" / "i18n.js").write_text(strip_script_tags(read("30-i18n.js") + read("35-i18n2.js")), encoding="utf8")
-app = "".join(read(f) for f in ["40-core.js", "50-plan.js", "60-today.js", "70-tutor.js", "75-site.js", "77-ai.js", "78-chat.js", "80-rest.js"])
+app = "".join(read(f) for f in ["40-core.js", "50-plan.js", "60-today.js", "70-tutor.js", "75-site.js", "77-ai.js", "78-chat.js", "79-extra.js", "80-rest.js"])
 (OUT / "js" / "app.js").write_text(strip_script_tags(app), encoding="utf8")
 
 web = r'''window.IS_WEB_SITE=true;
@@ -110,11 +111,25 @@ self.addEventListener("fetch",e=>{
 """ % (ver, json.dumps(assets))
 (OUT / "sw.js").write_text(sw, encoding="utf8")
 
-manifest = {"name": "يونس | منصة المذاكرة الذكية", "short_name": "يونس", "description": DESC, "lang": "ar", "dir": "rtl",
-            "start_url": "./", "scope": "./", "display": "standalone", "background_color": "#F4F6FB", "theme_color": "#15213B",
+if (BASE / "assets" / "icons").exists():
+    for f in (BASE / "assets" / "icons").iterdir():
+        _sh.copy(f, OUT / "icons" / f.name)
+(OUT / "screenshots").mkdir(exist_ok=True)
+for f in ["landing.png", "mobile-dark.png"]:
+    if (BASE / "assets" / f).exists():
+        _sh.copy(BASE / "assets" / f, OUT / "screenshots" / f)
+manifest = {"id": "./", "name": "يونس | منصة المذاكرة الذكية", "short_name": "يونس", "description": DESC, "lang": "ar", "dir": "rtl",
+            "start_url": "./", "scope": "./", "display": "standalone", "orientation": "any", "background_color": "#F4F6FB", "theme_color": "#18284D",
+            "categories": ["education", "productivity"],
             "icons": [{"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
                       {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
-                      {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}]}
+                      {"src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+                      {"src": "icons/logo.svg", "sizes": "any", "type": "image/svg+xml"}],
+            "shortcuts": [{"name": "اسأل يونس", "url": "./#chat", "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}]},
+                          {"name": "غرفة التركيز", "url": "./#focus", "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}]},
+                          {"name": "اليوم", "url": "./#today", "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}]}],
+            "screenshots": [{"src": "screenshots/landing.png", "sizes": "1280x800", "type": "image/png", "form_factor": "wide", "label": "الصفحة الرئيسية"},
+                            {"src": "screenshots/mobile-dark.png", "sizes": "390x844", "type": "image/png", "form_factor": "narrow", "label": "على الجوال"}]}
 (OUT / "manifest.webmanifest").write_text(json.dumps(manifest, ensure_ascii=False, indent=1), encoding="utf8")
 (OUT / ".nojekyll").write_text("", encoding="utf8")
 (OUT / "robots.txt").write_text("User-agent: *\nAllow: /\n", encoding="utf8")
