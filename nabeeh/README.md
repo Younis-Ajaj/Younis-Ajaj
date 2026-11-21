@@ -91,7 +91,13 @@ npm install                   # playwright وaxe-core للاختبارات
 node tests/e2e.js             # تشغيل الفحوصات
 ```
 
-**النشر:** Settings ← Pages ← Deploy from a branch ← اختر الفرع ومجلد `/docs`، وفعّل Enforce HTTPS.
+**النشر:** يُنشر الموقع على GitHub Pages من فرع `gh-pages`، الذي يحمل محتوى مجلد `docs/`. بعد أي تعديل:
+
+```bash
+python3 nabeeh/build_web.py && node nabeeh/tests/e2e.js
+git add -A && git commit -m "..."
+git subtree split --prefix docs -b gh-pages && git push origin gh-pages
+```
 
 **نتائج الفحص:**
 - الاختبارات الآلية: 56 من 56.
