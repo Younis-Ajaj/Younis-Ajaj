@@ -1,4 +1,4 @@
-// End-to-end checks for the Nabeeh website (docs/), served over HTTP with its real CSP.
+// End-to-end checks for the Younis study website (docs/), served over HTTP with its real CSP.
 const { chromium } = require('playwright');
 const http = require('http'); const fs = require('fs'); const path = require('path');
 const ROOT = path.join(__dirname, '..', '..', 'docs');
@@ -41,7 +41,7 @@ function sse(text) {
   // 1. landing
   await p.goto(URL0); await p.waitForTimeout(1500); await D();
   check('landing shows for a new visitor', await p.isVisible('#landing') && !(await p.isVisible('.shell')));
-  check('brand is Nabeeh', (await p.textContent('.lnav .brand b')).trim() === 'نبيه');
+  check('brand is Younis', (await p.textContent('.lnav .brand b')).trim() === 'يونس');
   await D();
   // 2. onboarding
   await p.click('.lhero [data-go-app]');
@@ -138,7 +138,7 @@ function sse(text) {
   check('chat switches to AI mode with a key', (await p.textContent('#chatMode')).includes('الذكاء'));
   await p.fill('#chatIn', 'اشرح لي القيمة الاحتمالية'); await p.click('#chatSend'); await p.waitForTimeout(1500); await D();
   check('chat streams the AI answer', (await p.textContent('#chatLog .msg.bot >> nth=-1')).includes('شرح تجريبي'));
-  check('chat sends tutor instructions with the question', !!lastBody && JSON.stringify(lastBody.messages).includes('You are Nabeeh') && JSON.stringify(lastBody.messages).includes('القيمة الاحتمالية'));
+  check('chat sends tutor instructions with the question', !!lastBody && JSON.stringify(lastBody.messages).includes('You are Younis') && JSON.stringify(lastBody.messages).includes('القيمة الاحتمالية'));
   await p.evaluate(() => location.hash = 'stats'); await p.waitForTimeout(300);
   await p.click('#repBtn'); await p.waitForTimeout(1500); await D();
   check('weekly AI report written', (await p.textContent('#repOut')).length > 5);
@@ -158,7 +158,7 @@ function sse(text) {
   // 9. export / import
   await p.evaluate(() => location.hash = 'stats'); await p.waitForTimeout(300);
   const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#expBtn')]);
-  const file = path.join(require('os').tmpdir(), 'nabeeh-backup-test.json'); await dl.saveAs(file);
+  const file = path.join(require('os').tmpdir(), 'younis-backup-test.json'); await dl.saveAs(file);
   const exported = JSON.parse(fs.readFileSync(file, 'utf8'));
   check('backup exports state', Array.isArray(exported.subjects) && exported.subjects.length === 3 && !JSON.stringify(exported).includes('sk-ant-'));
   await D();
@@ -172,7 +172,7 @@ function sse(text) {
   // 11. wipe clears key
   await p.evaluate(() => location.hash = 'stats'); await p.waitForTimeout(300);
   await p.click('#wipeBtn'); await p.click('#wipeYes'); await p.waitForTimeout(400);
-  check('erase removes the saved key', !(await p.evaluate(() => (sessionStorage.getItem('nabeeh.ak') || '') + (localStorage.getItem('nabeeh.ak') || ''))));
+  check('erase removes the saved key', !(await p.evaluate(() => (sessionStorage.getItem('younis.ak') || '') + (localStorage.getItem('younis.ak') || ''))));
   check('no console errors', errs.length === 0, errs.slice(0, 3).join(' | '));
   check('no CSP violations', csp.length === 0, csp.slice(0, 2).join(' | '));
   check('mocked API was called', apiCalls >= 8, 'calls=' + apiCalls);

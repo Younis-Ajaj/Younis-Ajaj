@@ -1,9 +1,13 @@
 <script>
 /* ================= AI: own-key Claude client (website), insights, weekly report, mistake analysis ================= */
-var AK="nabeeh.ak";
-function getKey(){try{return sessionStorage.getItem(AK)||localStorage.getItem(AK)||""}catch(e){return ""}}
+var AK="younis.ak", OLD_AK="nabeeh.ak";
+function getKey(){try{
+  var k=sessionStorage.getItem(AK)||localStorage.getItem(AK);
+  if(!k){var lo=localStorage.getItem(OLD_AK), so=sessionStorage.getItem(OLD_AK); k=lo||so; if(lo) localStorage.setItem(AK,lo); if(k) sessionStorage.setItem(AK,k); localStorage.removeItem(OLD_AK); sessionStorage.removeItem(OLD_AK)}
+  return k||"";
+}catch(e){return ""}}
 function setKey(k,remember){try{sessionStorage.setItem(AK,k); if(remember) localStorage.setItem(AK,k); else localStorage.removeItem(AK)}catch(e){}}
-function clearKey(){try{sessionStorage.removeItem(AK); localStorage.removeItem(AK)}catch(e){}}
+function clearKey(){try{[AK,OLD_AK].forEach(function(k){sessionStorage.removeItem(k); localStorage.removeItem(k)})}catch(e){}}
 
 function makeSample(key){
   var A=window.AnthropicSDK, client=new A({apiKey:key,dangerouslyAllowBrowser:true,maxRetries:2});

@@ -1,8 +1,8 @@
 {
-  "name": "nabeeh",
+  "name": "younis-study",
   "version": "1.0.0",
   "private": true,
-  "description": "Nabeeh: an Arabic-first exam-preparation website for school and university students.",
+  "description": "Younis (\u064a\u0648\u0646\u0633): an Arabic-first smart study platform for school and university students.",
   "scripts": {
     "build": "python3 build_web.py",
     "build:artifact": "python3 build_artifact.py",

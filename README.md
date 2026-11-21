@@ -24,8 +24,8 @@
 
 ## 🚀 Projects
 
-### [Nabeeh (نبيه): Arabic study platform](nabeeh/)
-A free exam-preparation website for school and university students: personal study plan, "Ask Nabeeh" chat assistant, focus room, AI tutor (Claude), spaced-repetition review, mistake notebook, prayer-aware breaks and Hijri date.
+### [Younis (يونس): Smart study platform](younis-study/)
+A free exam-preparation website for school and university students: personal study plan, "Ask Younis" chat assistant, focus room, AI tutor (Claude), spaced-repetition review, mistake notebook, prayer-aware breaks and Hijri date.
 Live: https://younis-ajaj.github.io/Younis-Ajaj/
 
 ### [Internet Applications Development, Phase I](iad-phase1/)

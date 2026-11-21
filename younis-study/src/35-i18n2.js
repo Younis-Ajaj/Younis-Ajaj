@@ -17,7 +17,7 @@ Object.assign(T.ar,{
  inStart:"ابدأ أول جلسة تركيز وراجع بطاقة واحدة، فيبدأ المحلل بقراءة نمطك ويعطيك توصيات أدق.",
  repH:"التقرير الأسبوعي الذكي", repLede:"يقرأ Claude أرقامك الحقيقية من آخر 7 أيام ويكتب لك ما نجح، وأين الخطر، وخطة يومية للأسبوع القادم.", repBtn:"اكتب تقريري الأسبوعي", repNoAI:"فعّل المعلّم الذكي من صفحة «المعلّم» لتحصل على تقرير أسبوعي مكتوب لك.",
  mistAI:"حلّل أخطائي بالذكاء الاصطناعي", mistExplain:"اشرح خطئي",
- brand:"نبيه", tagline:"منصة المذاكرة الذكية", fileBig:function(n){return "«"+n+"» أكبر من 25 ميغابايت. قسّمه أو الصق النص المهم منه."},
+ brand:"يونس", tagline:"منصة المذاكرة الذكية", fileBig:function(n){return "«"+n+"» أكبر من 25 ميغابايت. قسّمه أو الصق النص المهم منه."},
  aboutSite:"عن الموقع", startNow:"ابدأ الآن مجاناً", openApp:"ادخل إلى خطتي",
  l_navFeat:"المزايا", l_navHow:"كيف يعمل", l_navArab:"للطالب العربي", l_navFaq:"أسئلة شائعة",
  l_eyebrow:"منصة مذاكرة عربية للمدرسة والتوجيهي والجامعة", l_h1a:"امتحاناتك", l_h1b:"تحت السيطرة",
@@ -33,9 +33,9 @@ Object.assign(T.ar,{
  mkPrayLbl:function(c){return "مواقيت اليوم في "+c+" (تقريبية)"},
  l_faqH:"أسئلة شائعة",
  faqs:[["هل الموقع مجاني؟","نعم. التخطيط والتركيز والمراجعة والإحصاءات مجانية بالكامل. المعلّم الذكي يعمل عبر حسابك في Claude."],["هل يرى غيري موادي وخطتي؟","لا. كل مستخدم يختار مواده بنفسه، وبياناته محفوظة في متصفحه وفي حسابه الخاص فقط، ولا يراها أي مستخدم آخر."],["هل يناسب طلاب المدارس؟","نعم، فيه مسار للمدرسة وللتوجيهي والثانوية العامة، ومسار للجامعة."],["كيف أنقل خطتي إلى جهاز آخر؟","افتح الموقع بنفس حسابك فتظهر خطتك تلقائياً، أو نزّل نسخة احتياطية من صفحة «إنجازي» واسترجعها."],["هل مواقيت الصلاة دقيقة؟","هي حسابات فلكية تقريبية قد تختلف دقائق عن التقويم الرسمي في بلدك، وتستطيع إيقافها في أي وقت."]],
- l_ctaH:"الامتحان قادم، وخطتك تنتظرك", l_ctaP:"ابدأ الآن، واختر موادك، ودع نبيه يرتّب لك الباقي.",
+ l_ctaH:"الامتحان قادم، وخطتك تنتظرك", l_ctaP:"ابدأ الآن، واختر موادك، ودع يونس يرتّب لك الباقي.",
  onb:{next:"التالي", back:"رجوع", finish:"ابنِ خطتي", skipDemo:"تخطَّ وجرّب مثالاً جاهزاً",
-  say:["أهلاً! أنا نبيه، رفيقك في المذاكرة. لنجهّز خطتك في دقيقة.","من أين تدرس؟ نستخدمه للتاريخ الهجري ومواقيت الصلاة إن أردت.","اختر موادك من القائمة أو أضف مادة بنفسك. أنت من يقرّر.","متى امتحان كل مادة؟ وكم هي صعبة عليك؟","آخر خطوة! كم ساعة تقدر تذاكر يومياً؟"],
+  say:["أهلاً! أنا يونس، رفيقك في المذاكرة. لنجهّز خطتك في دقيقة.","من أين تدرس؟ نستخدمه للتاريخ الهجري ومواقيت الصلاة إن أردت.","اختر موادك من القائمة أو أضف مادة بنفسك. أنت من يقرّر.","متى امتحان كل مادة؟ وكم هي صعبة عليك؟","آخر خطوة! كم ساعة تقدر تذاكر يومياً؟"],
   h:["عرّفنا بك","بلدك وتخصصك","اختر موادك","مواعيد الامتحانات","وقتك"],
   nameL:"ما اسمك؟ (اختياري)", nameP:"مثال: يونس", stageQ:"في أي مرحلة أنت؟",
   stages:[["مدرسة","الصفوف الإعدادية والثانوية"],["التوجيهي","الثانوية العامة، سنة الحسم"],["جامعة","بكالوريوس أو دبلوم"]],
@@ -73,7 +73,7 @@ Object.assign(T.en,{
  inStart:"Do your first focus session and review one card, and the insights will start learning your pattern.",
  repH:"Smart weekly report", repLede:"Claude reads your real numbers from the last 7 days and writes what worked, where the risk is, and a day-by-day plan for next week.", repBtn:"Write my weekly report", repNoAI:"Turn on the AI tutor on the Tutor page to get a weekly report written for you.",
  mistAI:"Analyse my mistakes with AI", mistExplain:"Explain my mistake",
- brand:"Nabeeh", tagline:"Smart study platform", fileBig:function(n){return "“"+n+"” is over 25 MB. Split it or paste the key text."},
+ brand:"Younis", tagline:"Smart study platform", fileBig:function(n){return "“"+n+"” is over 25 MB. Split it or paste the key text."},
  aboutSite:"About", startNow:"Start free now", openApp:"Open my plan",
  l_navFeat:"Features", l_navHow:"How it works", l_navArab:"For Arab students", l_navFaq:"FAQ",
  l_eyebrow:"An Arabic-first study platform for school and university", l_h1a:"Your exams,", l_h1b:"under control",
@@ -89,9 +89,9 @@ Object.assign(T.en,{
  mkPrayLbl:function(c){return "Today's prayer times in "+c+" (approximate)"},
  l_faqH:"Questions",
  faqs:[["Is it free?","Yes. Planning, focus, review and stats are completely free. The AI tutor runs through your own Claude account."],["Can others see my courses and plan?","No. Each user picks their own courses, and their data is saved only in their browser and their own account. No other user can see it."],["Does it work for school students?","Yes. There's a track for school and the final school year, and one for university."],["How do I move my plan to another device?","Open the site with the same account and your plan appears, or download a backup from Progress and restore it."],["Are prayer times exact?","They're approximate astronomical calculations that can differ by a few minutes from your country's official calendar, and you can turn them off any time."]],
- l_ctaH:"The exam is coming. Your plan is waiting.", l_ctaP:"Start now, pick your courses, and let Nabeeh arrange the rest.",
+ l_ctaH:"The exam is coming. Your plan is waiting.", l_ctaP:"Start now, pick your courses, and let Younis arrange the rest.",
  onb:{next:"Next", back:"Back", finish:"Build my plan", skipDemo:"Skip and try a sample plan",
-  say:["Hi! I'm Nabeeh, your study buddy. Let's set up your plan in a minute.","Where do you study? We use it for the Hijri date and prayer times if you want them.","Pick your courses from the list or add your own. You decide.","When is each exam, and how hard is it for you?","Last step! How many hours can you study a day?"],
+  say:["Hi! I'm Younis, your study buddy. Let's set up your plan in a minute.","Where do you study? We use it for the Hijri date and prayer times if you want them.","Pick your courses from the list or add your own. You decide.","When is each exam, and how hard is it for you?","Last step! How many hours can you study a day?"],
   h:["About you","Country and major","Pick your courses","Exam dates","Your time"],
   nameL:"Your name (optional)", nameP:"e.g. Younis", stageQ:"Which stage are you at?",
   stages:[["School","Middle and high school"],["Final school year","Tawjihi or Thanaweya Amma"],["University","Bachelor's or diploma"]],
@@ -112,16 +112,16 @@ Object.assign(T.en,{
  owlSay:["A small step today beats none.","I'm here. Shall we start the first session?","Review your cards before bed; memory sets while you sleep.","Well done! Keep this rhythm."]
 });
 
-T.ar.nav.chat="اسأل نبيه"; T.en.nav.chat="Ask Nabeeh";
-T.ar.feats=T.ar.feats.slice(); T.ar.feats[3]=["اسأل نبيه","مساعد محادثة يجيبك بإجابات منظّمة ودقيقة خطوة بخطوة، ويعرف موادك ومواعيد امتحاناتك."];
-T.en.feats=T.en.feats.slice(); T.en.feats[3]=["Ask Nabeeh","A chat assistant that answers in clear, accurate steps and knows your courses and exam dates."];
+T.ar.nav.chat="اسأل يونس"; T.en.nav.chat="Ask Younis";
+T.ar.feats=T.ar.feats.slice(); T.ar.feats[3]=["اسأل يونس","مساعد محادثة يجيبك بإجابات منظّمة ودقيقة خطوة بخطوة، ويعرف موادك ومواعيد امتحاناتك."];
+T.en.feats=T.en.feats.slice(); T.en.feats[3]=["Ask Younis","A chat assistant that answers in clear, accurate steps and knows your courses and exam dates."];
 Object.assign(T.ar,{
- chatH:"اسأل نبيه", chatLede:"مساعدك الدراسي: اسأله عن أي درس، أو عن خطتك وامتحاناتك، أو كيف تستخدم الموقع. يجيبك بإجابات منظّمة خطوة بخطوة.",
+ chatH:"اسأل يونس", chatLede:"مساعدك الدراسي: اسأله عن أي درس، أو عن خطتك وامتحاناتك، أو كيف تستخدم الموقع. يجيبك بإجابات منظّمة خطوة بخطوة.",
  chatModeAI:"متصل بالذكاء الاصطناعي", chatModeLocal:"الوضع الأساسي (بدون ذكاء اصطناعي)", chatFiles:"استخدم ملفاتي من صفحة المعلّم", chatClear:"امسح المحادثة", chatSend:"أرسل",
  chatPh:"اكتب سؤالك هنا… (Enter للإرسال، Shift+Enter لسطر جديد)", chatNote:"قد يخطئ الذكاء الاصطناعي، فتحقّق من المعلومات المهمة في كتابك أو مع أستاذك.", chatCopy:"انسخ", copied2:"نُسخت الإجابة",
- chatHello:function(n){return "أهلاً"+(n?" يا "+n:"")+"! أنا نبيه. اسألني عن أي درس، أو اكتب «ماذا أذاكر اليوم؟»."},
+ chatHello:function(n){return "أهلاً"+(n?" يا "+n:"")+"! أنا يونس. اسألني عن أي درس، أو اكتب «ماذا أذاكر اليوم؟»."},
  chatSug:["ماذا أذاكر اليوم؟","متى امتحاني القادم؟","كم جاهزيتي في موادي؟","اشرح لي اختبار الفرضيات خطوة بخطوة","أنا متوتر من الامتحان","كيف أستخدم البطاقات؟"],
- lrHello:"أهلاً! أنا نبيه، مساعدك في المذاكرة.",
+ lrHello:"أهلاً! أنا يونس، مساعدك في المذاكرة.",
  lrCan:["أخبرك ماذا تذاكر اليوم، ومتى امتحاناتك، وكم جاهزيتك في كل مادة","أشرح لك كيف تستخدم أي أداة في الموقع","أبحث لك في ملفات مادتك (الصقها أو ارفعها في صفحة المعلّم وفعّل «استخدم ملفاتي»)","أعطيك خطوات عملية للتعامل مع توتر الامتحانات","وإذا كان المعلّم الذكي مفعّلاً، أجيبك عن أي سؤال دراسي بشرح كامل"],
  lrStress:"## توتر الامتحان طبيعي، وهذه خطوات تساعدك الآن\n1. **تنفّس ببطء:** شهيق 4 ثوانٍ، حبس 4، زفير 4، وكرّرها 4 مرات.\n2. **قسّم المهمة:** ابدأ جلسة تركيز واحدة مدتها 25 دقيقة على أسهل جزء.\n3. **نَم جيداً:** 7 إلى 8 ساعات تثبّت ما ذاكرته أكثر من السهر.\n4. **راجع ولا تبدأ جديداً:** في آخر يومين ركّز على دفتر أخطائك وبطاقاتك.\n5. **تحدّث مع شخص تثق به** إذا شعرت أن التوتر أكبر من قدرتك.\n\nإذا راودتك أفكار بإيذاء نفسك، تواصل فوراً مع شخص تثق به أو مع خدمات الطوارئ في بلدك.",
  lrNoPlan:"لم تبنِ خطتك بعد. افتح صفحة «الخطة» وأضف موادك ومواعيد امتحاناتها، وسأخبرك بعدها بما تذاكره كل يوم.",
@@ -142,12 +142,12 @@ Object.assign(T.ar,{
  ]
 });
 Object.assign(T.en,{
- chatH:"Ask Nabeeh", chatLede:"Your study assistant: ask about any lesson, your plan and exams, or how to use the site. Answers come in clear, organised steps.",
+ chatH:"Ask Younis", chatLede:"Your study assistant: ask about any lesson, your plan and exams, or how to use the site. Answers come in clear, organised steps.",
  chatModeAI:"Connected to AI", chatModeLocal:"Basic mode (no AI)", chatFiles:"Use my files from the Tutor page", chatClear:"Clear chat", chatSend:"Send",
  chatPh:"Type your question… (Enter to send, Shift+Enter for a new line)", chatNote:"AI can make mistakes, so check important facts in your textbook or with your teacher.", chatCopy:"Copy", copied2:"Answer copied",
- chatHello:function(n){return "Hi"+(n?" "+n:"")+"! I'm Nabeeh. Ask me about any lesson, or type “What should I study today?”."},
+ chatHello:function(n){return "Hi"+(n?" "+n:"")+"! I'm Younis. Ask me about any lesson, or type “What should I study today?”."},
  chatSug:["What should I study today?","When is my next exam?","How ready am I in my courses?","Explain hypothesis testing step by step","I'm stressed about the exam","How do I use flashcards?"],
- lrHello:"Hi! I'm Nabeeh, your study assistant.",
+ lrHello:"Hi! I'm Younis, your study assistant.",
  lrCan:["Tell you what to study today, when your exams are and how ready you are","Explain how to use any tool on the site","Search your course files (paste or upload them on the Tutor page and tick “Use my files”)","Give practical steps for exam stress","With the AI tutor on, answer any study question in full"],
  lrStress:"## Exam stress is normal. These steps help right now\n1. **Breathe slowly:** in for 4, hold for 4, out for 4, four times.\n2. **Shrink the task:** do one 25-minute focus session on the easiest part.\n3. **Sleep:** 7 to 8 hours locks in what you studied better than staying up.\n4. **Review, don't start new:** in the last two days focus on your mistake notebook and cards.\n5. **Talk to someone you trust** if it feels bigger than you can handle.\n\nIf you have thoughts of harming yourself, contact someone you trust or your local emergency services right away.",
  lrNoPlan:"You haven't built your plan yet. Open Plan, add your courses and exam dates, and I'll tell you what to study each day.",

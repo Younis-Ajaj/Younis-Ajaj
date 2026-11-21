@@ -2,7 +2,7 @@
 "use strict";
 var T={
 ar:{
- title:"خطّتي للامتحانات", lang:"English", brand:"خطّتي", tagline:"مساعدك الذكي للامتحانات",
+ title:"يونس | منصة المذاكرة الذكية", lang:"English", brand:"خطّتي", tagline:"مساعدك الذكي للامتحانات",
  nav:{today:"اليوم",plan:"الخطة",focus:"التركيز",tutor:"المعلّم",review:"المراجعة",stats:"إنجازي",grades:"العلامات"},
  demoNote:"هذه خطة تجريبية لتجرّب كل الميزات. استبدلها بموادك الحقيقية متى أردت.", demoReal:"ابدأ خطتي الحقيقية",
  greet:["صباح الخير","مساء الخير","سهرة موفقة"], countFirst:"حتى أول امتحان", countNone:"لا امتحانات قادمة",
@@ -95,7 +95,7 @@ ar:{
  demoNames:["رياضيات","برمجة","إحصاء","لغة إنجليزية"]
 },
 en:{
- title:"My exam plan", lang:"العربية", brand:"My Plan", tagline:"Your smart exam companion",
+ title:"Younis | Smart study platform", lang:"العربية", brand:"My Plan", tagline:"Your smart exam companion",
  nav:{today:"Today",plan:"Plan",focus:"Focus",tutor:"Tutor",review:"Review",stats:"Progress",grades:"Grades"},
  demoNote:"This is a sample plan so you can try every feature. Replace it with your real courses any time.", demoReal:"Start my real plan",
  greet:["Good morning","Good evening","Late-night study"], countFirst:"days to your first exam", countNone:"No upcoming exams",

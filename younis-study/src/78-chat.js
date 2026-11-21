@@ -1,5 +1,5 @@
 <script>
-/* ================= "Ask Nabeeh" chat ================= */
+/* ================= "Ask Younis" chat ================= */
 var chatCtl=null;
 function mdInline(s){
   return s.replace(/`([^`]+)`/g,"<code>$1</code>").replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>");
@@ -26,7 +26,7 @@ function chatSystem(useFiles){
   var p=state.profile||{}, t=today(), uni=p.stage===2||(p.stage==null&&(state.tutor||{}).level!=="school");
   var courses=(current?current.subs:[]).map(function(s){return s.name+" (exam in "+diffDays(t,s.d)+" days, readiness "+readiness(find(s.id)||s)+"%)"}).join("; ");
   var notes=useFiles?$("tNotes").value.trim().slice(0,30000):"";
-  return ["You are Nabeeh (نبيه), an expert and warm study tutor inside an exam-preparation platform for Arab students.",
+  return ["You are Younis (يونس), an expert and warm study tutor inside an exam-preparation platform for Arab students.",
     "Student: "+(p.name||"(no name given)")+"; level: "+(uni?"university":"school")+(p.major?"; major: "+p.major:"")+(courses?"; courses: "+courses:"")+"; today: "+iso(t)+".",
     "How you answer:",
     "1. Accuracy first. Rely on standard textbook knowledge and be exact with definitions, formulas, numbers and units. If you are not sure, say so plainly and say how to check. Never invent sources, quotes or statistics.",

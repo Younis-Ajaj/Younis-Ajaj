@@ -1,4 +1,4 @@
-"""Builds the single-file Claude artifact version of Nabeeh as exam-plan.html."""
+"""Builds the single-file Claude artifact version of Younis as exam-plan.html."""
 import pathlib
 BASE = pathlib.Path(__file__).parent
 SRC = BASE / "src"

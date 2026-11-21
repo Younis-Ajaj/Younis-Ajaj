@@ -1329,10 +1329,14 @@ document.addEventListener("click",function(e){
   if(e.target.id==="pRedo") openOnb();
 });
 /* ================= AI: own-key Claude client (website), insights, weekly report, mistake analysis ================= */
-var AK="nabeeh.ak";
-function getKey(){try{return sessionStorage.getItem(AK)||localStorage.getItem(AK)||""}catch(e){return ""}}
+var AK="younis.ak", OLD_AK="nabeeh.ak";
+function getKey(){try{
+  var k=sessionStorage.getItem(AK)||localStorage.getItem(AK);
+  if(!k){var lo=localStorage.getItem(OLD_AK), so=sessionStorage.getItem(OLD_AK); k=lo||so; if(lo) localStorage.setItem(AK,lo); if(k) sessionStorage.setItem(AK,k); localStorage.removeItem(OLD_AK); sessionStorage.removeItem(OLD_AK)}
+  return k||"";
+}catch(e){return ""}}
 function setKey(k,remember){try{sessionStorage.setItem(AK,k); if(remember) localStorage.setItem(AK,k); else localStorage.removeItem(AK)}catch(e){}}
-function clearKey(){try{sessionStorage.removeItem(AK); localStorage.removeItem(AK)}catch(e){}}
+function clearKey(){try{[AK,OLD_AK].forEach(function(k){sessionStorage.removeItem(k); localStorage.removeItem(k)})}catch(e){}}
 
 function makeSample(key){
   var A=window.AnthropicSDK, client=new A({apiKey:key,dangerouslyAllowBrowser:true,maxRetries:2});
@@ -1479,7 +1483,7 @@ $("mlist").addEventListener("click",function(e){
   var prompt="Question: "+m.q+"\nThe student answered: "+m.you+"\nThe correct answer: "+m.right+"\n\nExplain briefly why the student's answer is wrong, why the correct answer is right, and give one tip to avoid this mistake. "+langRule()+PLAIN;
   sample(prompt,{effort:"low",onText:function(r){out.textContent=r.text}}).then(function(r){out.textContent=r.text},function(err){if(err&&err.code==="not_granted"){out.hidden=true; tutorOff(); return} out.textContent=errCopy(err)}).then(function(){b.disabled=false});
 });
-/* ================= "Ask Nabeeh" chat ================= */
+/* ================= "Ask Younis" chat ================= */
 var chatCtl=null;
 function mdInline(s){
   return s.replace(/`([^`]+)`/g,"<code>$1</code>").replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>");
@@ -1506,7 +1510,7 @@ function chatSystem(useFiles){
   var p=state.profile||{}, t=today(), uni=p.stage===2||(p.stage==null&&(state.tutor||{}).level!=="school");
   var courses=(current?current.subs:[]).map(function(s){return s.name+" (exam in "+diffDays(t,s.d)+" days, readiness "+readiness(find(s.id)||s)+"%)"}).join("; ");
   var notes=useFiles?$("tNotes").value.trim().slice(0,30000):"";
-  return ["You are Nabeeh (نبيه), an expert and warm study tutor inside an exam-preparation platform for Arab students.",
+  return ["You are Younis (يونس), an expert and warm study tutor inside an exam-preparation platform for Arab students.",
     "Student: "+(p.name||"(no name given)")+"; level: "+(uni?"university":"school")+(p.major?"; major: "+p.major:"")+(courses?"; courses: "+courses:"")+"; today: "+iso(t)+".",
     "How you answer:",
     "1. Accuracy first. Rely on standard textbook knowledge and be exact with definitions, formulas, numbers and units. If you are not sure, say so plainly and say how to check. Never invent sources, quotes or statistics.",
