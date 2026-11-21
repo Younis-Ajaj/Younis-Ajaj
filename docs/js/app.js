@@ -1081,7 +1081,7 @@ function owlSvg(cls,attrs){
 function owlCheer(){var o=document.querySelector("#helloOwl .owl"); if(!o) return; o.classList.remove("happy"); void o.getBBox(); o.classList.add("happy"); setTimeout(function(){o.classList.remove("happy")},2200)}
 
 /* ================= COUNTRIES, PRAYER TIMES, HIJRI ================= */
-var COUNTRIES=[["JO","الأردن","Jordan","عمّان","Amman",31.95,35.93,18,18],["SA","السعودية","Saudi Arabia","الرياض","Riyadh",24.71,46.68,18.5,"90"],["EG","مصر","Egypt","القاهرة","Cairo",30.04,31.24,19.5,17.5],["PS","فلسطين","Palestine","القدس","Jerusalem",31.77,35.21,18,18],["IQ","العراق","Iraq","بغداد","Baghdad",33.31,44.36,18,17],["SY","سوريا","Syria","دمشق","Damascus",33.51,36.29,18,17],["LB","لبنان","Lebanon","بيروت","Beirut",33.89,35.5,18,17],["KW","الكويت","Kuwait","الكويت","Kuwait City",29.37,47.98,18,17.5],["AE","الإمارات","UAE","أبوظبي","Abu Dhabi",24.45,54.38,18.2,18.2],["QA","قطر","Qatar","الدوحة","Doha",25.29,51.53,18,"90"],["BH","البحرين","Bahrain","المنامة","Manama",26.23,50.59,18.5,"90"],["OM","عُمان","Oman","مسقط","Muscat",23.59,58.41,18,18],["YE","اليمن","Yemen","صنعاء","Sanaa",15.37,44.19,18,17],["LY","ليبيا","Libya","طرابلس","Tripoli",32.89,13.19,18,17],["TN","تونس","Tunisia","تونس","Tunis",36.81,10.18,18,18],["DZ","الجزائر","Algeria","الجزائر","Algiers",36.75,3.06,18,17],["MA","المغرب","Morocco","الرباط","Rabat",34.02,-6.84,19,17],["SD","السودان","Sudan","الخرطوم","Khartoum",15.5,32.56,18,17]];
+var COUNTRIES=[["JO","الأردن","Jordan","عمّان","Amman",31.95,35.93,18,18,"Asia/Amman"],["SA","السعودية","Saudi Arabia","الرياض","Riyadh",24.71,46.68,18.5,"90","Asia/Riyadh"],["EG","مصر","Egypt","القاهرة","Cairo",30.04,31.24,19.5,17.5,"Africa/Cairo"],["PS","فلسطين","Palestine","القدس","Jerusalem",31.77,35.21,18,18,"Asia/Hebron"],["IQ","العراق","Iraq","بغداد","Baghdad",33.31,44.36,18,17,"Asia/Baghdad"],["SY","سوريا","Syria","دمشق","Damascus",33.51,36.29,18,17,"Asia/Damascus"],["LB","لبنان","Lebanon","بيروت","Beirut",33.89,35.5,18,17,"Asia/Beirut"],["KW","الكويت","Kuwait","الكويت","Kuwait City",29.37,47.98,18,17.5,"Asia/Kuwait"],["AE","الإمارات","UAE","أبوظبي","Abu Dhabi",24.45,54.38,18.2,18.2,"Asia/Dubai"],["QA","قطر","Qatar","الدوحة","Doha",25.29,51.53,18,"90","Asia/Qatar"],["BH","البحرين","Bahrain","المنامة","Manama",26.23,50.59,18.5,"90","Asia/Bahrain"],["OM","عُمان","Oman","مسقط","Muscat",23.59,58.41,18,18,"Asia/Muscat"],["YE","اليمن","Yemen","صنعاء","Sanaa",15.37,44.19,18,17,"Asia/Aden"],["LY","ليبيا","Libya","طرابلس","Tripoli",32.89,13.19,18,17,"Africa/Tripoli"],["TN","تونس","Tunisia","تونس","Tunis",36.81,10.18,18,18,"Africa/Tunis"],["DZ","الجزائر","Algeria","الجزائر","Algiers",36.75,3.06,18,17,"Africa/Algiers"],["MA","المغرب","Morocco","الرباط","Rabat",34.02,-6.84,19,17,"Africa/Casablanca"],["SD","السودان","Sudan","الخرطوم","Khartoum",15.5,32.56,18,17,"Africa/Khartoum"]];
 function country(code){return COUNTRIES.filter(function(c){return c[0]===code})[0]||COUNTRIES[0]}
 function cName(c){return state.lang==="en"?c[2]:c[1]}
 function cCity(c){return state.lang==="en"?c[4]:c[3]}
@@ -1102,19 +1102,22 @@ function prayTimes(date,c){
   var base=Date.UTC(date.getFullYear(),date.getMonth(),date.getDate());
   return (prayCache[key]=hrs.map(function(h){return new Date(base+(h-lng/15)*36e5)}));
 }
-function hm(d){return new Intl.DateTimeFormat(state.lang==="en"?"en-GB":"ar-JO-u-nu-latn",{hour:"numeric",minute:"2-digit"}).format(d)}
+function hm(d,tz){var o={hour:"numeric",minute:"2-digit"}; if(tz) o.timeZone=tz; try{return new Intl.DateTimeFormat(state.lang==="en"?"en-GB":"ar-JO-u-nu-latn",o).format(d)}catch(e){delete o.timeZone; return new Intl.DateTimeFormat(state.lang==="en"?"en-GB":"ar-JO-u-nu-latn",o).format(d)}}
+function cityDate(c){
+  try{var pr=new Intl.DateTimeFormat("en-CA",{timeZone:c[9],year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date()), g=function(t){return +pr.filter(function(x){return x.type===t})[0].value}; return new Date(g("year"),g("month")-1,g("day"))}catch(e){return today()}
+}
 function hijri(d){
   try{return new Intl.DateTimeFormat(state.lang==="en"?"en-u-ca-islamic-umalqura":"ar-SA-u-ca-islamic-umalqura-nu-latn",{day:"numeric",month:"long",year:"numeric"}).format(d)}catch(e){return ""}
 }
 function nextPrayer(){
-  var c=country(state.profile.country), now=new Date(), list=prayTimes(today(),c), i;
+  var c=country(state.profile.country), now=new Date(), list=prayTimes(cityDate(c),c), i;
   for(i=0;i<6;i++) if(i!==1&&list[i]>now) return {i:i,t:list[i]};
-  return {i:0,t:prayTimes(addDays(today(),1),c)[0]};
+  return {i:0,t:prayTimes(addDays(cityDate(c),1),c)[0]};
 }
 var lastPrayCheck=Date.now();
 function prayCheck(){
   if(!state.profile.pray||!F.running||F.phase!=="focus"){lastPrayCheck=Date.now(); return}
-  var now=Date.now(), list=prayTimes(today(),country(state.profile.country));
+  var cc=country(state.profile.country), now=Date.now(), list=prayTimes(cityDate(cc),cc);
   for(var i=0;i<6;i++){if(i===1) continue; var t=+list[i]; if(t>lastPrayCheck&&t<=now){fPause(); chime(520); toast(L().prayAlert(L().prayNames[i])); break}}
   lastPrayCheck=now;
 }
@@ -1153,15 +1156,15 @@ function renderLanding(){
   var c=country(state.profile.country), t=new Date(), np=nextPrayerFor(c);
   $("mkGreg").textContent=dayFmt(today()); $("mkHijri").textContent=hijri(t);
   $("mkPrayLbl").textContent=l.mkPrayLbl(cCity(c));
-  var list=prayTimes(today(),c);
-  $("mkPray").innerHTML=[0,2,3,4,5].map(function(i){return '<div'+(i===np?' class="nx"':'')+'>'+esc(l.prayNames[i])+'<b>'+hm(list[i])+'</b></div>'}).join("");
+  var list=prayTimes(cityDate(c),c);
+  $("mkPray").innerHTML=[0,2,3,4,5].map(function(i){return '<div'+(i===np?' class="nx"':'')+'>'+esc(l.prayNames[i])+'<b>'+hm(list[i],c[9])+'</b></div>'}).join("");
   $("mkQuote").textContent=l.quotes[1];
   $("ctaOwl").innerHTML=owlSvg(); if(!$("sceneOwl").firstChild) $("sceneOwl").innerHTML=owlSvg("",'x="466" y="212" width="80" height="88"');
   qa("[data-go-app]").forEach(function(b){b.textContent=state.onboarded?l.openApp:l.startNow});
   $("lLang").textContent=l.lang; $("lTheme").innerHTML=$("themeBtn").innerHTML;
   animateRings($("pvRings")); observeReveal();
 }
-function nextPrayerFor(c){var now=new Date(), list=prayTimes(today(),c); for(var i=0;i<6;i++) if(i!==1&&list[i]>now) return i; return 0}
+function nextPrayerFor(c){var now=new Date(), list=prayTimes(cityDate(c),c); for(var i=0;i<6;i++) if(i!==1&&list[i]>now) return i; return 0}
 var revObs=null;
 function observeReveal(){
   if(reduce||!("IntersectionObserver" in window)) return;
@@ -1284,10 +1287,10 @@ function renderTodayExtras(){
   if(!$("helloOwl").firstChild) $("helloOwl").innerHTML=owlSvg();
   var pb=$("prayBox");
   if(p.pray){
-    var c=country(p.country), np=nextPrayer(), list=prayTimes(today(),c), mins=Math.max(0,Math.round((np.t-new Date())/6e4));
+    var c=country(p.country), np=nextPrayer(), list=prayTimes(cityDate(c),c), mins=Math.max(0,Math.round((np.t-new Date())/6e4));
     pb.hidden=false;
-    pb.innerHTML='<div class="pray"><div style="flex:1 1 160px"><span class="soft small">'+esc(l.prayNext)+' · '+esc(cCity(c))+'</span><div class="pn">'+esc(l.prayNames[np.i])+' <span class="num" style="font-size:1rem">'+hm(np.t)+'</span></div><span class="soft small">'+esc(l.prayIn(mins))+'</span></div></div>'+
-      '<div class="prayrow">'+[0,2,3,4,5].map(function(i){return '<div'+(i===np.i?' class="nx"':'')+'>'+esc(l.prayNames[i])+'<b>'+hm(list[i])+'</b></div>'}).join("")+'</div>';
+    pb.innerHTML='<div class="pray"><div style="flex:1 1 160px"><span class="soft small">'+esc(l.prayNext)+' · '+esc(cCity(c))+'</span><div class="pn">'+esc(l.prayNames[np.i])+' <span class="num" style="font-size:1rem">'+hm(np.t,c[9])+'</span></div><span class="soft small">'+esc(l.prayIn(mins))+'</span></div></div>'+
+      '<div class="prayrow">'+[0,2,3,4,5].map(function(i){return '<div'+(i===np.i?' class="nx"':'')+'>'+esc(l.prayNames[i])+'<b>'+hm(list[i],c[9])+'</b></div>'}).join("")+'</div>';
   }else pb.hidden=true;
   var eb=$("eveBox"), t=today(), subs=current?current.subs:[];
   var tom=subs.filter(function(s){return diffDays(t,s.d)===1})[0], tod=subs.filter(function(s){return diffDays(t,s.d)===0})[0];

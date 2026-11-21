@@ -20,7 +20,7 @@ function sse(text) {
   const srv = http.createServer((q, r) => { let f = path.join(ROOT, decodeURIComponent(q.url.split('?')[0])); if (f.endsWith('/')) f += 'index.html'; fs.readFile(f, (e, d) => { if (e) { r.writeHead(404); r.end(); return } r.writeHead(200, { 'Content-Type': TYPES[path.extname(f)] || 'application/octet-stream' }); r.end(d) }) }).listen(8770);
   const URL0 = 'http://localhost:8770/';
   const b = await chromium.launch();
-  const ctx = await b.newContext({ viewport: { width: 1280, height: 900 }, timezoneId: 'Asia/Amman', acceptDownloads: true });
+  const ctx = await b.newContext({ viewport: { width: 1280, height: 900 }, timezoneId: 'America/New_York', acceptDownloads: true });
   let apiCalls = 0; let lastApiHeaders = null; let lastBody = null;
   await ctx.route('https://api.anthropic.com/**', async route => {
     apiCalls++; lastApiHeaders = await route.request().allHeaders();
@@ -59,6 +59,7 @@ function sse(text) {
   check('plan built and Today shown', await p.isVisible('#v-today') && (await p.$$('#todayList .block')).length > 0);
   check('greeting uses the name', (await p.textContent('#greet')).includes('سارة'));
   check('prayer card shown', await p.isVisible('#prayBox'));
+  const fajr = await p.textContent('#prayBox .prayrow div >> nth=0'); check('Amman Fajr shows in Amman morning time on a New York device', /[0-9]:[0-9]{2}\s*ص/.test(fajr), fajr);
   check('insights card shown', await p.isVisible('#insBox'));
   await D();
   // planner invariants

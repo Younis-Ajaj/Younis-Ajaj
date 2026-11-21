@@ -18,7 +18,7 @@
 2. In the repository's Settings → Pages, keep **Enforce HTTPS** ticked.
 3. Protect the publishing branch (Settings → Branches) so only reviewed changes go live.
 4. Change the site only through `nabeeh-src/` and rebuild with `python3 nabeeh-src/build_web.py`.
-5. Before publishing a change, run the end-to-end checks: `npm install playwright axe-core` then `node nabeeh-src/tests/e2e.js` (47 checks, including CSP, accessibility and phone layout).
+5. Before publishing a change, run the end-to-end checks: `npm install playwright axe-core` then `node nabeeh-src/tests/e2e.js` (56 checks, including CSP, accessibility, phone layout and time zones).
 
 ## Reporting a problem
 
