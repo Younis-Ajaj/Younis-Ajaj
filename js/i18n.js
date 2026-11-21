@@ -354,3 +354,19 @@ Object.assign(T.en,{
   {k:"install|offline|app",a:"## Install it as an app\nUse your browser menu → “Add to Home screen”. After your first visit it works offline."}
  ]
 });
+Object.assign(T.ar,{
+ l_navArab:"مصمَّم لك", l_arabH:"مصمَّم ليناسب يومك",
+ impH:"استورد جدول امتحاناتك", impLede:"الصق الجدول من موقع جامعتك أو رسالة المدرسة، أو ارفع ملفه، فتُضاف المواد والتواريخ تلقائياً.", impBtn:"استيراد الجدول",
+ impL:"جدول الامتحانات", impP:"مثال:\nإحصاء 2026-12-10\nقواعد البيانات 14/12/2026", impFileL:"ارفع ملف الجدول", impGo:"استخرج المواد والتواريخ", impAdd:"أضف المحددة إلى خطتي",
+ impEmpty:"الصق الجدول أولاً.", impNone:"لم أجد تواريخ في النص. اكتب كل مادة مع تاريخها في سطر.", impDone:function(n){return "أُضيفت "+n+" مادة. راجع صعوبتها ثم اضغط «ابنِ خطتي»."},
+ shareH:"شارك إنجازك", shareLede:"صورة أنيقة بإنجازك هذا الأسبوع تشاركها مع أصدقائك على واتساب أو إنستغرام وتحفّزهم معك.", shareBtn:"أنشئ صورة إنجازي",
+ cardTitle:function(n){return n?("إنجاز "+n+" هذا الأسبوع"):"إنجازي هذا الأسبوع"}, cardMin:"دقيقة تركيز", cardSess:"جلسة منجزة", cardStreak:"أيام متتالية", cardLvl:"المستوى", cardAlt:"صورة إنجازك", cardShareText:"إنجازي هذا الأسبوع على منصة يونس للمذاكرة"
+});
+Object.assign(T.en,{
+ l_navArab:"Made for you", l_arabH:"Built around your day",
+ impH:"Import your exam timetable", impLede:"Paste the timetable from your university site or school message, or upload its file, and courses and dates are added for you.", impBtn:"Import timetable",
+ impL:"Exam timetable", impP:"e.g.\nStatistics 2026-12-10\nDatabases 14/12/2026", impFileL:"Upload timetable file", impGo:"Extract courses and dates", impAdd:"Add selected to my plan",
+ impEmpty:"Paste the timetable first.", impNone:"No dates found. Put each course with its date on its own line.", impDone:function(n){return n+" courses added. Check their difficulty, then press “Build my plan”."},
+ shareH:"Share your progress", shareLede:"A polished image of this week's progress to share on WhatsApp or Instagram and motivate your friends.", shareBtn:"Create my progress image",
+ cardTitle:function(n){return n?(n+"'s week"):"My week"}, cardMin:"focus minutes", cardSess:"sessions done", cardStreak:"day streak", cardLvl:"level", cardAlt:"Your progress image", cardShareText:"My week on the Younis study platform"
+});

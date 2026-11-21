@@ -1,4 +1,5 @@
 {
+ "id": "./",
  "name": "يونس | منصة المذاكرة الذكية",
  "short_name": "يونس",
  "description": "يونس: منصة مذاكرة عربية مجانية. خطة يومية تُبنى على موادك، غرفة تركيز، مراجعة متباعدة، دفتر أخطاء، ومواقيت الصلاة.",
@@ -7,8 +8,13 @@
  "start_url": "./",
  "scope": "./",
  "display": "standalone",
+ "orientation": "any",
  "background_color": "#F4F6FB",
- "theme_color": "#15213B",
+ "theme_color": "#18284D",
+ "categories": [
+  "education",
+  "productivity"
+ ],
  "icons": [
   {
    "src": "icons/icon-192.png",
@@ -21,10 +27,63 @@
    "type": "image/png"
   },
   {
-   "src": "icons/icon-512.png",
+   "src": "icons/icon-maskable-512.png",
    "sizes": "512x512",
    "type": "image/png",
    "purpose": "maskable"
+  },
+  {
+   "src": "icons/logo.svg",
+   "sizes": "any",
+   "type": "image/svg+xml"
+  }
+ ],
+ "shortcuts": [
+  {
+   "name": "اسأل يونس",
+   "url": "./#chat",
+   "icons": [
+    {
+     "src": "icons/icon-192.png",
+     "sizes": "192x192"
+    }
+   ]
+  },
+  {
+   "name": "غرفة التركيز",
+   "url": "./#focus",
+   "icons": [
+    {
+     "src": "icons/icon-192.png",
+     "sizes": "192x192"
+    }
+   ]
+  },
+  {
+   "name": "اليوم",
+   "url": "./#today",
+   "icons": [
+    {
+     "src": "icons/icon-192.png",
+     "sizes": "192x192"
+    }
+   ]
+  }
+ ],
+ "screenshots": [
+  {
+   "src": "screenshots/landing.png",
+   "sizes": "1280x800",
+   "type": "image/png",
+   "form_factor": "wide",
+   "label": "الصفحة الرئيسية"
+  },
+  {
+   "src": "screenshots/mobile-dark.png",
+   "sizes": "390x844",
+   "type": "image/png",
+   "form_factor": "narrow",
+   "label": "على الجوال"
   }
  ]
 }
