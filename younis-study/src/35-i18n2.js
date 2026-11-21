@@ -19,7 +19,7 @@ Object.assign(T.ar,{
  mistAI:"حلّل أخطائي بالذكاء الاصطناعي", mistExplain:"اشرح خطئي",
  brand:"يونس", tagline:"منصة المذاكرة الذكية", fileBig:function(n){return "«"+n+"» أكبر من 25 ميغابايت. قسّمه أو الصق النص المهم منه."},
  aboutSite:"عن الموقع", startNow:"ابدأ الآن مجاناً", openApp:"ادخل إلى خطتي",
- l_navFeat:"المزايا", l_navHow:"كيف يعمل", l_navArab:"للطالب العربي", l_navFaq:"أسئلة شائعة",
+ l_navFeat:"المزايا", l_navHow:"كيف يعمل", l_navArab:"مصمَّم لك", l_navFaq:"أسئلة شائعة",
  l_eyebrow:"منصة مذاكرة عربية للمدرسة والتوجيهي والجامعة", l_h1a:"امتحاناتك", l_h1b:"تحت السيطرة",
  l_sub:"خطة مذاكرة يوماً بيوم تُبنى على موادك أنت، غرفة تركيز بأصوات هادئة، معلّم ذكي يشرح ويختبرك من ملفاتك، ومراجعة تثبّت المعلومة حتى يوم الامتحان.",
  l_how:"شاهد كيف يعمل", l_t1:"بالعربية أولاً", l_t2:"موادك وبياناتك لك وحدك", l_t3:"يعمل على الجوال والكمبيوتر", l_t4:"معلّم ذكي من Claude",
@@ -28,7 +28,7 @@ Object.assign(T.ar,{
  l_howH:"ثلاث خطوات وتبدأ", l_howLede:"لا حساب جديد ولا إعدادات معقدة. دقيقة واحدة وخطتك جاهزة.",
  hows:[["اختر مرحلتك وموادك","مدرسة أو توجيهي أو جامعة. اختر موادك من القائمة أو اكتبها بنفسك."],["حدّد مواعيد امتحاناتك","وكم ساعة تقدر تذاكر يومياً، ويوم راحتك الأسبوعي."],["ذاكر مع خطتك","افتح الموقع كل يوم: جلسات اليوم، المعلّم، والمراجعة بانتظارك."]],
  l_pv1:"رياضيات", l_pv1s:"حل تمارين وأسئلة سنوات", l_pv2:"فيزياء", l_pv2s:"فهم الدروس وتلخيصها",
- l_arabH:"صُمّم للطالب العربي", l_arabLede:"ليس ترجمة لتطبيق أجنبي. بُني من اليوم الأول لطريقة دراستنا وتقويمنا ويومنا.",
+ l_arabH:"مصمَّم ليناسب يومك", l_arabLede:"ليس ترجمة لتطبيق أجنبي. بُني من اليوم الأول لطريقة دراستنا وتقويمنا ويومنا.",
  arabs:[["واجهة عربية كاملة","من اليمين إلى اليسار، بخطوط عربية واضحة، مع الإنجليزية متى أردت."],["التاريخ الهجري","يظهر بجانب الميلادي في لوحتك كل يوم."],["استراحات تراعي الصلاة","اختيارياً: تنبيه هادئ عند حلول وقت الصلاة أثناء جلسة التركيز، لمدن الوطن العربي."],["مواد جاهزة للاختيار","مواد التوجيهي والثانوية العامة وتخصصات الجامعات، وتضيف ما تشاء."],["حكمة كل يوم","أمثال وأبيات تحفّزك، من المتنبي إلى «من جدّ وجد»."]],
  mkPrayLbl:function(c){return "مواقيت اليوم في "+c+" (تقريبية)"},
  l_faqH:"أسئلة شائعة",
@@ -75,7 +75,7 @@ Object.assign(T.en,{
  mistAI:"Analyse my mistakes with AI", mistExplain:"Explain my mistake",
  brand:"Younis", tagline:"Smart study platform", fileBig:function(n){return "“"+n+"” is over 25 MB. Split it or paste the key text."},
  aboutSite:"About", startNow:"Start free now", openApp:"Open my plan",
- l_navFeat:"Features", l_navHow:"How it works", l_navArab:"For Arab students", l_navFaq:"FAQ",
+ l_navFeat:"Features", l_navHow:"How it works", l_navArab:"Made for you", l_navFaq:"FAQ",
  l_eyebrow:"An Arabic-first study platform for school and university", l_h1a:"Your exams,", l_h1b:"under control",
  l_sub:"A day-by-day study plan built on your own courses, a calm focus room, an AI tutor that explains and quizzes you from your files, and review that makes it stick until exam day.",
  l_how:"See how it works", l_t1:"Arabic first", l_t2:"Your courses and data are yours alone", l_t3:"Works on phone and desktop", l_t4:"AI tutor by Claude",
@@ -84,7 +84,7 @@ Object.assign(T.en,{
  l_howH:"Three steps and you're in", l_howLede:"No new account, no complicated setup. One minute and your plan is ready.",
  hows:[["Pick your stage and courses","School, final year or university. Choose courses from the list or type your own."],["Set your exam dates","Plus how many hours you can study a day and your weekly day off."],["Study with your plan","Open the site each day: today's sessions, the tutor and your review are waiting."]],
  l_pv1:"Mathematics", l_pv1s:"Exercises and past papers", l_pv2:"Physics", l_pv2s:"Understand and summarise",
- l_arabH:"Designed for Arab students", l_arabLede:"Not a translated foreign app. Built from day one around how we study, our calendar and our day.",
+ l_arabH:"Built around your day", l_arabLede:"Not a translated foreign app. Built from day one around how we study, our calendar and our day.",
  arabs:[["Full Arabic interface","Right to left with clear Arabic type, and English whenever you want it."],["Hijri date","Shown beside the Gregorian date on your dashboard every day."],["Prayer-aware breaks","Optional: a gentle notice when prayer time arrives during a focus session, for cities across the Arab world."],["Ready-made course lists","Final-year school subjects and university majors, plus anything you add."],["Daily wisdom","Proverbs and verses that keep you going."]],
  mkPrayLbl:function(c){return "Today's prayer times in "+c+" (approximate)"},
  l_faqH:"Questions",
@@ -168,7 +168,6 @@ Object.assign(T.en,{
  ]
 });
 Object.assign(T.ar,{
- l_navArab:"مصمَّم لك", l_arabH:"مصمَّم ليناسب يومك",
  impH:"استورد جدول امتحاناتك", impLede:"الصق الجدول من موقع جامعتك أو رسالة المدرسة، أو ارفع ملفه، فتُضاف المواد والتواريخ تلقائياً.", impBtn:"استيراد الجدول",
  impL:"جدول الامتحانات", impP:"مثال:\nإحصاء 2026-12-10\nقواعد البيانات 14/12/2026", impFileL:"ارفع ملف الجدول", impGo:"استخرج المواد والتواريخ", impAdd:"أضف المحددة إلى خطتي",
  impEmpty:"الصق الجدول أولاً.", impNone:"لم أجد تواريخ في النص. اكتب كل مادة مع تاريخها في سطر.", impDone:function(n){return "أُضيفت "+n+" مادة. راجع صعوبتها ثم اضغط «ابنِ خطتي»."},
@@ -176,7 +175,6 @@ Object.assign(T.ar,{
  cardTitle:function(n){return n?("إنجاز "+n+" هذا الأسبوع"):"إنجازي هذا الأسبوع"}, cardMin:"دقيقة تركيز", cardSess:"جلسة منجزة", cardStreak:"أيام متتالية", cardLvl:"المستوى", cardAlt:"صورة إنجازك", cardShareText:"إنجازي هذا الأسبوع على منصة يونس للمذاكرة"
 });
 Object.assign(T.en,{
- l_navArab:"Made for you", l_arabH:"Built around your day",
  impH:"Import your exam timetable", impLede:"Paste the timetable from your university site or school message, or upload its file, and courses and dates are added for you.", impBtn:"Import timetable",
  impL:"Exam timetable", impP:"e.g.\nStatistics 2026-12-10\nDatabases 14/12/2026", impFileL:"Upload timetable file", impGo:"Extract courses and dates", impAdd:"Add selected to my plan",
  impEmpty:"Paste the timetable first.", impNone:"No dates found. Put each course with its date on its own line.", impDone:function(n){return n+" courses added. Check their difficulty, then press “Build my plan”."},

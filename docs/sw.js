@@ -1,4 +1,4 @@
-const CACHE="younis-fadc33f26e";
+const CACHE="younis-f32f3c5dc3";
 const ASSETS=["./", "./index.html", "./js/i18n.js", "./js/web.js", "./js/app.js", "./manifest.webmanifest", "./fonts/fonts.css", "./icons/icon-192.png", "./icons/icon-512.png"];
 self.addEventListener("install",e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)));self.skipWaiting()});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
