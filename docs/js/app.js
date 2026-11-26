@@ -5,8 +5,8 @@ if(IS_WEB&&window.top!==window.self){try{window.top.location.href=window.locatio
 var KEY="studyplan.v1";
 var HL=["--hl1","--hl2","--hl3","--hl4","--hl5","--hl6"];
 var GAP=[1,0.6,0.3], HPC=[1.5,2.5,3.5], OFFSET=[0,0.25,0.5];
-var VIEWS=["today","chat","plan","focus","tutor","review","stats","grades"];
-var ICON={chat:"i-chat",today:"i-today",plan:"i-plan",focus:"i-focus",tutor:"i-tutor",review:"i-review",stats:"i-stats",grades:"i-grades"};
+var VIEWS=["today","chat","lens","plan","focus","tutor","review","uni","stats","grades"].filter(function(v){return IS_WEB||(v!=="lens"&&v!=="uni")});
+var ICON={lens:"i-cam",uni:"i-uni",chat:"i-chat",today:"i-today",plan:"i-plan",focus:"i-focus",tutor:"i-tutor",review:"i-review",stats:"i-stats",grades:"i-grades"};
 var $=function(id){return document.getElementById(id)};
 var qa=function(sel,root){return [].slice.call((root||document).querySelectorAll(sel))};
 
@@ -56,7 +56,7 @@ function push(){
 function normalize(){
   var d={subjects:[],scores:[],cards:[],mistakes:[],done:{},active:{},log:{},bank:{},focusBy:{},badges:{},
     tutor:{major:"",course:"",topic:""},grade:{now:"",fin:"40"},gpa:{rows:[],prev:"",prevH:"",target:""},
-    cnt:{sessions:0,cardsMade:0,perfect:0,maps:0,mistRev:0,fey:0},profile:{},eve:{},chat:[]};
+    cnt:{sessions:0,cardsMade:0,perfect:0,maps:0,mistRev:0,fey:0},profile:{},eve:{},chat:[],uni:{},uniPlans:{},uniAi:{}};
   Object.keys(d).forEach(function(k){
     var v=state[k];
     if(Array.isArray(d[k])){if(!Array.isArray(v)) state[k]=d[k]}
@@ -174,6 +174,7 @@ function renderNav(){
     return '<a href="#'+v+'" data-v="'+v+'"'+(v===route?' aria-current="page"':'')+'><svg><use href="#'+ICON[v]+'"/></svg><span>'+l.nav[v]+'</span>'+(v==="review"&&due?'<span class="badge">'+due+'</span>':'')+'</a>';
   }).join("");
   $("sideNav").innerHTML=html; $("tabNav").innerHTML=html;
+  var cur=$("tabNav").querySelector("[aria-current]"); if(cur&&cur.scrollIntoView&&!$("tabNav").hidden) cur.scrollIntoView({block:"nearest",inline:"center"});
 }
 function go(){
   var h=(location.hash||"").replace("#","");
@@ -437,7 +438,8 @@ $("copyBtn").onclick=function(){
 var downloads=null;
 function saveFile(name,data){
   if(!downloads&&IS_WEB){
-    var a=document.createElement("a"), url=URL.createObjectURL(new Blob([data],{type:/\.json$/.test(name)?"application/json":/\.png$/.test(name)?"image/png":"text/csv;charset=utf-8"}));
+    var type=/\.json$/.test(name)?"application/json":/\.png$/.test(name)?"image/png":/\.txt$/.test(name)?"text/plain;charset=utf-8":/\.docx$/.test(name)?"application/vnd.openxmlformats-officedocument.wordprocessingml.document":"text/csv;charset=utf-8";
+    var a=document.createElement("a"), url=URL.createObjectURL(data instanceof Blob?data:new Blob([data],{type:type}));
     a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(url)},4000);
     return Promise.resolve({status:"saved"});
   }
@@ -620,7 +622,7 @@ onRoute.focus=renderFocusForm;
 var sample=null, sampleChecked=false, ctl=null, tts=null, dict=null;
 function langRule(){return state.lang==="en"?"Write in English.":"اكتب بالعربية مع إبقاء المصطلحات العلمية بالإنجليزية بين قوسين."}
 var PLAIN="\nPlain text only: no markdown symbols such as asterisks or heading marks.";
-function errCopy(e){var l=L(), c=e&&e.code; return c==="rate_limited"?l.eRate:c==="invalid_json"?l.eJson:c==="auth"?l.aiBadKey:c==="refused"?l.aiRefused:c==="network"?l.aiNet:l.eGen}
+function errCopy(e){var l=L(), c=e&&e.code; return c==="rate_limited"?l.eRate:c==="invalid_json"?l.eJson:c==="auth"?l.aiBadKey:c==="refused"?l.aiRefused:c==="network"?l.aiNet:c==="web_off"?l.uniWebOff:l.eGen}
 $("coachStop").onclick=function(){if(ctl) ctl.abort()};
 $("coachBtn").onclick=function(){
   if(!sample||!current) return;
@@ -1064,6 +1066,790 @@ function webDict(){
     active:function(){return on}, onFinal:function(f){fin=f}, onPartial:function(){}, onState:function(f){st=f}
   };
 }
+/* ================= Lens: camera + image analysis with Claude vision ================= */
+/* Flow: photo (camera, upload, paste or drop) -> resize in a <canvas> -> base64 JPEG ->
+   one Claude request with the image blocks + a precise instruction -> streamed Markdown answer. */
+var IMG_EDGE=2576, IMG_PIXELS=3.75e6, IMG_MAX=5, IMG_B64_MAX=5e6;
+var lensImgs=[], lensMode="solve", lensCtl=null, lensMsgs=null, lensText="", camStream=null, camFacing="environment";
+var LENS_MODES=["solve","explain","ocr","summary","cards","check","custom"];
+var LENS_EFFORT={solve:"high",check:"high",explain:"high",custom:"high",ocr:"medium",summary:"medium",cards:"medium"};
+
+function lensSystem(){
+  return "You are Younis (يونس), a meticulous study assistant. Students send you photos of their study material: textbook pages, handwritten notes, exam questions, diagrams, charts, code and their own solutions.\n"+
+  "Accuracy rules:\n"+
+  "- Read the whole image carefully first. Quote the exact numbers, symbols, units and wording you rely on.\n"+
+  "- If a part is blurry, cut off or ambiguous, say exactly which part and what you assumed. Never invent content that is not visible.\n"+
+  "- For any calculation, work step by step, then check the result by substituting back or by a second method.\n"+
+  "- Do exactly what the student asked. If there are several questions and the student did not pick one, answer all of them in order, numbered as in the image.\n"+
+  "Format: Markdown with short headings, numbered steps and lists, and | tables when useful. Write maths in plain text with Unicode symbols (x², √, π, ≤, →, ∫, Σ), never LaTeX.\n"+
+  langRule();
+}
+function lensTask(mode,n){
+  var many=n>1?" The student sent "+n+" photos, in order; treat them as one piece of material.":"";
+  return ({
+    solve:"Solve the problem(s) in the image step by step, explaining each step briefly so a student can follow. Finish with a line that starts with **"+(state.lang==="en"?"Final answer:":"الجواب النهائي:")+"**",
+    explain:"Explain what the image shows for a student: the main idea, the key concepts, how to read any diagram or chart, and what students often get wrong. Add a short example if it helps.",
+    ocr:"Transcribe all the text in the image exactly as written, in its original language. Keep the structure: headings, lists, tables, line breaks and equations. Do not translate, correct or summarise. Write [?] for any word you cannot read.",
+    summary:"Summarise this material for exam revision: the main idea in one sentence, the key points as a list, important definitions and formulas, then 3 likely exam questions.",
+    check:"The image shows the student's own solution. Check it line by line: say what is correct, point to the first mistake and explain why it is wrong, show the correct working from there, and end with a one-line verdict (correct / partly correct / wrong).",
+    custom:"Answer the student's question about the image."
+  })[mode]+many;
+}
+
+/* ---------- images: load, resize, rotate ---------- */
+function loadImg(src){return new Promise(function(res,rej){var im=new Image(); im.onload=function(){res(im)}; im.onerror=function(){rej(new Error("img"))}; im.src=src})}
+/* Claude reads up to 2576 px on the long edge and 3.75 MP; we resize to exactly that budget,
+   so text stays sharp but nothing is wasted. White background for transparent PNGs. */
+function fitImage(source,w,h,rot){
+  var s=Math.min(1,IMG_EDGE/Math.max(w,h),Math.sqrt(IMG_PIXELS/(w*h)));
+  var cw=Math.max(1,Math.round(w*s)), ch=Math.max(1,Math.round(h*s)), turn=rot%180!==0;
+  var c=document.createElement("canvas"); c.width=turn?ch:cw; c.height=turn?cw:ch;
+  var x=c.getContext("2d"); x.fillStyle="#fff"; x.fillRect(0,0,c.width,c.height);
+  x.translate(c.width/2,c.height/2); x.rotate(rot*Math.PI/180); x.drawImage(source,-cw/2,-ch/2,cw,ch);
+  var q=0.92, url=c.toDataURL("image/jpeg",q);
+  while(url.length>IMG_B64_MAX&&q>0.5){q-=0.1; url=c.toDataURL("image/jpeg",q)}
+  return {url:url,data:url.slice(url.indexOf(",")+1),w:c.width,h:c.height};
+}
+function addImage(source,w,h,name,revoke){
+  if(lensImgs.length>=IMG_MAX){toast(L().imgMax); if(revoke) URL.revokeObjectURL(revoke); return}
+  lensImgs.push({src:source,w:w,h:h,rot:0,name:name||"",revoke:revoke||null,fit:fitImage(source,w,h,0)});
+  lensMsgs=null; renderThumbs();
+}
+function addImageFile(file){
+  if(!file||!/^image\//.test(file.type)) return Promise.resolve();
+  if(file.size>40*1024*1024){toast(L().imgBad); return Promise.resolve()}
+  var url=URL.createObjectURL(file);
+  return loadImg(url).then(function(im){addImage(im,im.naturalWidth,im.naturalHeight,file.name,url)},function(){URL.revokeObjectURL(url); toast(L().imgBad)});
+}
+function renderThumbs(){
+  var l=L();
+  $("imgThumbs").innerHTML=lensImgs.map(function(m,i){
+    return '<div class="thumb"><img src="'+m.fit.url+'" alt="'+esc(l.imgAlt(i+1))+'">'+
+      '<button class="tb r" type="button" data-rot="'+i+'" aria-label="'+esc(l.imgRotate)+'"><svg><use href="#i-rotate"/></svg></button>'+
+      '<button class="tb x" type="button" data-rm="'+i+'" aria-label="'+esc(l.imgRemove)+'"><svg><use href="#i-x"/></svg></button>'+
+      '<small>'+m.fit.w+'×'+m.fit.h+'</small></div>';
+  }).join("");
+}
+$("imgThumbs").addEventListener("click",function(e){
+  var b=e.target.closest("button"); if(!b) return;
+  if(b.dataset.rm){var m=lensImgs.splice(+b.dataset.rm,1)[0]; if(m&&m.revoke) URL.revokeObjectURL(m.revoke)}
+  else if(b.dataset.rot){var r=lensImgs[+b.dataset.rot]; r.rot=(r.rot+90)%360; r.fit=fitImage(r.src,r.w,r.h,r.rot)}
+  lensMsgs=null; renderThumbs();
+});
+$("imgFile").addEventListener("change",function(){
+  var files=[].slice.call(this.files||[]); this.value="";
+  files.reduce(function(p,f){return p.then(function(){return addImageFile(f)})},Promise.resolve());
+});
+document.addEventListener("paste",function(e){
+  if(route!=="lens"||$("lensA").hidden) return;
+  var items=[].slice.call((e.clipboardData||{}).items||[]).filter(function(it){return it.kind==="file"&&/^image\//.test(it.type)});
+  if(!items.length) return; e.preventDefault();
+  items.forEach(function(it){addImageFile(it.getAsFile())});
+});
+["dragover","drop"].forEach(function(ev){
+  $("lensA").addEventListener(ev,function(e){
+    if(!e.dataTransfer||[].indexOf.call(e.dataTransfer.types||[],"Files")<0) return;
+    e.preventDefault();
+    if(ev==="drop") [].slice.call(e.dataTransfer.files||[]).forEach(addImageFile);
+  });
+});
+
+/* ---------- camera (getUserMedia) ---------- */
+function camError(msg){var el=$("camErr"); el.textContent=msg; el.hidden=false}
+function camStop(){
+  if(camStream){camStream.getTracks().forEach(function(t){t.stop()}); camStream=null}
+  var v=$("camVideo"); v.srcObject=null; $("camBox").hidden=true;
+}
+function camStart(){
+  var l=L(); $("camErr").hidden=true;
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){camError(l.camNone); return}
+  camStop();
+  navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:camFacing},width:{ideal:3840},height:{ideal:2160}}})
+    .then(function(stream){
+      if(route!=="lens"){stream.getTracks().forEach(function(t){t.stop()}); return}
+      camStream=stream; var v=$("camVideo"); v.srcObject=stream; $("camBox").hidden=false; v.play().catch(function(){});
+      $("camShot").focus();
+    })
+    .catch(function(e){var n=e&&e.name; camError(n==="NotAllowedError"||n==="SecurityError"?l.camDenied:n==="NotFoundError"||n==="OverconstrainedError"?l.camNone:l.camFail)});
+}
+$("camOpen").onclick=camStart;
+$("camClose").onclick=camStop;
+$("camFlip").onclick=function(){camFacing=camFacing==="environment"?"user":"environment"; camStart()};
+$("camShot").onclick=function(){
+  var v=$("camVideo"), w=v.videoWidth, h=v.videoHeight; if(!w||!h) return;
+  var c=document.createElement("canvas"); c.width=w; c.height=h; c.getContext("2d").drawImage(v,0,0,w,h);
+  addImage(c,w,h,"camera");
+  if(lensImgs.length>=IMG_MAX) camStop();
+};
+document.addEventListener("visibilitychange",function(){if(document.hidden) camStop()});
+addEventListener("hashchange",function(){if(route!=="lens") camStop()});
+
+/* ---------- tabs and modes ---------- */
+function lensTab(t){
+  var a=t!=="tr";
+  $("lensTabA").setAttribute("aria-selected",a); $("lensTabT").setAttribute("aria-selected",!a);
+  $("lensA").hidden=!a; $("lensT").hidden=a;
+  if(!a) camStop();
+}
+$("lensTabA").onclick=function(){lensTab("a")};
+$("lensTabT").onclick=function(){lensTab("tr")};
+function renderLensModes(){
+  var l=L();
+  $("lensModes").innerHTML=LENS_MODES.map(function(m){return '<button type="button" data-lm="'+m+'" aria-pressed="'+(m===lensMode)+'">'+esc(l.lensModes[m])+'</button>'}).join("");
+}
+$("lensModes").addEventListener("click",function(e){
+  var b=e.target.closest("[data-lm]"); if(!b) return;
+  lensMode=b.dataset.lm; renderLensModes(); if(lensMode==="custom") $("lensAsk").focus();
+});
+function renderLens(){
+  var ok=IS_WEB&&!!sample;
+  $("lensKey").hidden=ok; renderLensModes(); renderTrLangs();
+}
+onRoute.lens=renderLens;
+
+/* ---------- streaming answer ---------- */
+var lensFrame=0;
+function showLens(text,busy){
+  lensText=text;
+  if(lensFrame) return;
+  lensFrame=requestAnimationFrame(function(){lensFrame=0; var o=$("lensOut"); o.innerHTML=renderMd(lensText); o.setAttribute("aria-busy",busy?"true":"false")});
+}
+function lensBusy(on){$("lensGo").disabled=on; $("lensStop").hidden=!on; $("lensOut").setAttribute("aria-busy",on?"true":"false")}
+function lensAsk(messages,mode){
+  var l=L(); lensCtl=new AbortController(); lensBusy(true); $("lensPanel").hidden=false; $("lensExtra").innerHTML=""; $("lensFollow").hidden=true;
+  showLens(l.thinking,true);
+  var opts={system:lensSystem(),effort:LENS_EFFORT[mode]||"high",signal:lensCtl.signal,onText:function(r){showLens(r.text,true)}};
+  if(mode==="cards"){
+    return sample.json(messages,{system:lensSystem(),effort:"medium",signal:lensCtl.signal}).then(function(j){
+      var cards=(j&&Array.isArray(j.cards)?j.cards:[]).filter(function(c){return c&&c.q&&c.a}).slice(0,15);
+      showLens(cards.length?"":l.lensCardsNone,false); lensCardsUi(cards);
+    }).catch(function(e){showLens(errCopy(e),false)}).then(function(){lensBusy(false)});
+  }
+  return sample(messages,opts).then(function(r){
+    lensText=r.text; showLens(r.text,false);
+    lensMsgs=messages.concat([{role:"assistant",content:r.text}]);
+    $("lensFollow").hidden=false;
+  }).catch(function(e){
+    var kept=e&&e.text?e.text:""; showLens(e&&e.code==="cancelled"?kept:(kept?kept+"\n\n":"")+errCopy(e),false);
+  }).then(function(){lensBusy(false); $("lensPanel").scrollIntoView({behavior:"smooth",block:"start"})});
+}
+$("lensGo").onclick=function(){
+  var l=L(), ask=$("lensAsk").value.trim();
+  if(!sample){$("lensKey").hidden=false; toast(l.lensNeedKey); return}
+  if(!lensImgs.length){toast(l.lensNoImg); return}
+  if(lensMode==="custom"&&!ask){toast(l.lensNeedAsk); $("lensAsk").focus(); return}
+  var task=lensMode==="cards"?
+    "Create up to 12 flashcards from the most important facts, definitions and formulas in the image, for exam revision. Questions short and specific; answers short. "+langRule()+" Return JSON only: {\"cards\":[{\"q\":\"question\",\"a\":\"answer\"}]}":
+    lensTask(lensMode,lensImgs.length);
+  var content=lensImgs.map(function(m){return {type:"image",source:{type:"base64",media_type:"image/jpeg",data:m.fit.data}}});
+  content.push({type:"text",text:task+(ask?"\n\nThe student's exact request: "+ask:"")});
+  lensAsk([{role:"user",content:content}],lensMode);
+};
+$("lensStop").onclick=function(){if(lensCtl) lensCtl.abort()};
+$("lensFollow").addEventListener("submit",function(e){
+  e.preventDefault(); var q=$("lensQ").value.trim(); if(!q||!lensMsgs||!sample) return;
+  $("lensQ").value="";
+  lensAsk(lensMsgs.concat([{role:"user",content:q}]),"custom");
+});
+$("lensCopy").onclick=function(){copyText(lensText)};
+function copyText(t){
+  if(!t) return;
+  (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){toast(L().copied)},function(){toast(L().eGen)});
+}
+
+/* ---------- photo -> flashcards in the Review deck ---------- */
+var lensCards=[];
+function lensCardsUi(cards){
+  var l=L(); lensCards=cards; if(!cards.length) return;
+  var opts='<option value="">'+esc(l.lensNoSub)+'</option>'+state.subjects.filter(function(s){return s.name}).map(function(s){return '<option value="'+s.id+'">'+esc(s.name)+'</option>'}).join("");
+  $("lensExtra").innerHTML='<ul class="crs" style="margin-top:6px">'+cards.map(function(c,i){
+    return '<li><label class="row c chk" style="align-items:flex-start"><input type="checkbox" data-lc="'+i+'" checked><span><span class="nm">'+esc(String(c.q).slice(0,300))+'</span><span class="meta">'+esc(String(c.a).slice(0,600))+'</span></span></label></li>';
+  }).join("")+'</ul><div class="row c" style="margin-top:10px;gap:10px"><select id="lensCardSub" style="width:auto" aria-label="'+esc(l.course)+'">'+opts+'</select><button class="btn primary sm" type="button" id="lensCardAdd">'+esc(l.lensCardsAdd)+'</button></div>';
+}
+$("lensExtra").addEventListener("click",function(e){
+  if(e.target.id!=="lensCardAdd") return;
+  var sub=$("lensCardSub").value, n=0;
+  qa("[data-lc]:checked").forEach(function(cb){var c=lensCards[+cb.dataset.lc]; state.cards.push({id:Date.now()+n,q:String(c.q).slice(0,300),a:String(c.a).slice(0,600),box:0,due:"",sub:sub?+sub:""}); n++});
+  if(!n) return;
+  state.cnt.cardsMade+=n; save(); renderNav(); $("lensExtra").innerHTML=""; toast(L().lensCardsDone(n));
+});
+/* ================= Translation of files and images ================= */
+/* Text files are read in the browser (pdf.js, JSZip) and translated part by part.
+   Scanned PDFs and photos have no text layer, so their pages go to Claude as images. */
+var TR_LANGS=["ar","en","fr","tr","de","es","it","pt","ru","zh","ja","ko","hi","ur","fa","id","ms","nl"];
+var TR_RTL={ar:1,ur:1,fa:1};
+var TR_CHUNK=5000, TR_MAX_CHARS=200000, TR_MAX_PAGES=40;
+var trSrc=null, trCtl=null, trOut="", trName="translation";
+
+function langName(code){
+  try{return new Intl.DisplayNames([state.lang==="en"?"en":"ar"],{type:"language"}).of(code)}catch(e){return code}
+}
+function renderTrLangs(){
+  var sel=$("trTo"), cur=sel.value||state.trTo||(state.lang==="en"?"en":"ar");
+  sel.innerHTML=TR_LANGS.map(function(c){return '<option value="'+c+'"'+(c===cur?" selected":"")+'>'+esc(langName(c))+'</option>'}).join("");
+}
+$("trTo").addEventListener("change",function(){state.trTo=this.value; save()});
+
+/* Split text into parts of about TR_CHUNK characters at paragraph (then sentence) boundaries. */
+function chunkText(text){
+  var paras=text.split(/\n\s*\n/), parts=[], cur="";
+  function flush(){if(cur.trim()) parts.push(cur.trim()); cur=""}
+  paras.forEach(function(p){
+    if(p.length>TR_CHUNK){
+      flush();
+      var bits=p.match(/[^.!?؟。\n]+[.!?؟。\n]*\s*/g)||[p], piece="";
+      bits.forEach(function(b){if((piece+" "+b).length>TR_CHUNK&&piece){parts.push(piece.trim()); piece=""} piece+=(piece?" ":"")+b});
+      if(piece.trim()) parts.push(piece.trim());
+      return;
+    }
+    if((cur+"\n\n"+p).length>TR_CHUNK) flush();
+    cur+=(cur?"\n\n":"")+p;
+  });
+  flush();
+  return parts;
+}
+
+/* PDF: read the text layer page by page; if almost empty, render the pages as images. */
+async function pdfDoc(buf){
+  if(!window.pdfjsLib){await loadScript(lib("pdf.js/3.11.174/pdf.worker.min.js")); await loadScript(lib("pdf.js/3.11.174/pdf.min.js"))}
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc=lib("pdf.js/3.11.174/pdf.worker.min.js");
+  return window.pdfjsLib.getDocument({data:buf,isEvalSupported:false}).promise;
+}
+async function pdfPagesAsImages(doc,max){
+  var out=[];
+  for(var i=1;i<=Math.min(doc.numPages,max);i++){
+    var page=await doc.getPage(i), v1=page.getViewport({scale:1}), s=Math.min(3,2000/Math.max(v1.width,v1.height));
+    var vp=page.getViewport({scale:s}), c=document.createElement("canvas"); c.width=Math.round(vp.width); c.height=Math.round(vp.height);
+    var x=c.getContext("2d"); x.fillStyle="#fff"; x.fillRect(0,0,c.width,c.height);
+    await page.render({canvasContext:x,viewport:vp}).promise;
+    out.push(fitImage(c,c.width,c.height,0).data);
+    $("trInfo").textContent=L().trRendering(i,Math.min(doc.numPages,max));
+  }
+  return out;
+}
+async function loadTrFile(file){
+  var l=L(), ext=(file.name.split(".").pop()||"").toLowerCase();
+  trName=file.name.replace(/\.[^.]+$/,"")||"translation";
+  if(file.size>25*1024*1024){toast(l.fileBig(file.name)); return}
+  $("trInfo").textContent=l.trReading(file.name);
+  try{
+    if(/^image\//.test(file.type)){
+      var url=URL.createObjectURL(file), im=await loadImg(url);
+      trSrc={kind:"image",images:[fitImage(im,im.naturalWidth,im.naturalHeight,0).data]}; URL.revokeObjectURL(url);
+      $("trInfo").textContent=l.trInfoImg; return;
+    }
+    if(ext==="pdf"){
+      var doc=await pdfDoc(await file.arrayBuffer()), pages=[];
+      for(var i=1;i<=doc.numPages;i++){var tc=await (await doc.getPage(i)).getTextContent(); pages.push(tc.items.map(function(it){return it.str+(it.hasEOL?"\n":" ")}).join(""))}
+      var chars=pages.join("").replace(/\s/g,"").length;
+      if(chars<30*doc.numPages){
+        if(doc.numPages>TR_MAX_PAGES) toast(l.trTooMany);
+        trSrc={kind:"pages",images:await pdfPagesAsImages(doc,TR_MAX_PAGES)};
+        $("trInfo").textContent=l.trScanned+" "+l.trInfoPages(trSrc.images.length); return;
+      }
+      setTrText(pages.join("\n\n")); return;
+    }
+    setTrText(await readFile(file));
+  }catch(e){trSrc=null; $("trInfo").textContent=""; toast(l.readFail(file.name))}
+}
+function setTrText(text){
+  var l=L(); text=String(text||"").replace(/[ \t]+\n/g,"\n").replace(/\n{3,}/g,"\n\n").trim();
+  if(text.length>TR_MAX_CHARS){toast(l.trTooBig); text=text.slice(0,TR_MAX_CHARS)}
+  trSrc={kind:"text",text:text};
+  $("trText").value=text.length<=20000?text:text.slice(0,20000)+"\n…";
+  $("trInfo").textContent=l.trInfoText(text.length,chunkText(text).length);
+}
+$("trFile").addEventListener("change",function(){var f=this.files&&this.files[0]; if(f) loadTrFile(f)});
+$("trText").addEventListener("input",function(){
+  var t=this.value; trName="translation";
+  trSrc=t.trim()?{kind:"text",text:t.slice(0,TR_MAX_CHARS)}:null;
+  $("trInfo").textContent=trSrc?L().trInfoText(trSrc.text.length,chunkText(trSrc.text).length):"";
+});
+
+function trSystem(to){
+  var name=new Intl.DisplayNames(["en"],{type:"language"}).of(to);
+  return "You are a professional academic translator helping university and school students. Translate the content the student sends into "+name+".\n"+
+  "Rules:\n- Translate everything faithfully and completely: no summarising, no omissions, no notes or comments of your own.\n"+
+  "- Keep the structure in Markdown: headings, numbered and bulleted lists, tables, paragraphs.\n"+
+  "- Keep numbers, formulas, code, URLs, references and people's names unchanged.\n"+
+  "- Use the correct, standard terminology of the subject.\n"+
+  ($("trTerms").checked&&to!=="en"?"- The first time a technical term appears in this part, add the original English term in parentheses after its translation.\n":"")+
+  ($("trSimple").checked?"- Use clear, simple wording that a first-year student understands, without changing the meaning.\n":"")+
+  "- If the content is already in "+name+", return it unchanged.\nOutput only the translation.";
+}
+var trFrame=0;
+function showTr(text,busy){
+  if(trFrame) cancelAnimationFrame(trFrame);
+  trFrame=requestAnimationFrame(function(){trFrame=0; var o=$("trOut"); o.innerHTML=renderMd(text); o.setAttribute("aria-busy",busy?"true":"false")});
+}
+function trProgress(i,n,label){var p=$("trProg"); p.hidden=false; p.firstElementChild.style.width=Math.round(i/n*100)+"%"; $("trStatus").textContent=label}
+$("trGo").onclick=async function(){
+  var l=L(), to=$("trTo").value;
+  if(!sample){$("lensKey").hidden=false; toast(l.lensNeedKey); return}
+  if(!trSrc){toast(l.trEmpty); return}
+  var jobs=trSrc.kind==="text"?chunkText(trSrc.text).map(function(t){return {text:t}}):trSrc.images.map(function(d){return {img:d}});
+  if(!jobs.length){toast(l.trEmpty); return}
+  trCtl=new AbortController(); trOut=""; var btn=this, sys=trSystem(to), stopped=false;
+  btn.disabled=true; $("trStop").hidden=false; $("trPanel").hidden=false;
+  $("trOut").setAttribute("dir",TR_RTL[to]?"rtl":"ltr");
+  for(var i=0;i<jobs.length;i++){
+    var n=jobs.length, label=trSrc.kind==="text"?l.trPart(i+1,n):l.trPage(i+1,n), head=trSrc.kind==="pages"&&n>1?"### "+l.trPageH(i+1)+"\n\n":"";
+    trProgress(i,n,label);
+    var content;
+    if(jobs[i].img){
+      content=[{type:"image",source:{type:"base64",media_type:"image/jpeg",data:jobs[i].img}},
+        {type:"text",text:"Translate all the text visible in this "+(trSrc.kind==="pages"?"page ("+(i+1)+" of "+n+")":"image")+". Keep its layout as Markdown (headings, lists, tables). If there is no text, reply with —."}];
+    }else{
+      var prev=trOut.slice(-600);
+      content=(n>1?"This is part "+(i+1)+" of "+n+" of one document."+(prev?"\nThe end of the previous part, already translated (for consistent terms only, do not repeat it):\n<previous>\n"+prev+"\n</previous>\n":"\n"):"")+
+        "Translate:\n<document_part>\n"+jobs[i].text+"\n</document_part>";
+    }
+    var before=trOut+(trOut?"\n\n":"")+head;
+    try{
+      var r=await sample([{role:"user",content:content}],{system:sys,effort:"medium",signal:trCtl.signal,onText:function(x){showTr(before+x.text,true)}});
+      trOut=before+r.text.trim();
+      if(r.truncated) trOut+="\n\n[…]";
+    }catch(e){
+      if(e&&e.text) trOut=before+e.text;
+      stopped=true;
+      $("trStatus").textContent=e&&e.code==="cancelled"?l.trStopped:errCopy(e)+" — "+l.trStopped;
+      break;
+    }
+  }
+  showTr(trOut,false);
+  if(!stopped){trProgress(1,1,l.trDone)}
+  btn.disabled=false; $("trStop").hidden=true;
+};
+$("trStop").onclick=function(){if(trCtl) trCtl.abort()};
+$("trCopy").onclick=function(){copyText(trOut)};
+$("trTxt").onclick=function(){if(trOut) saveFile(trName+"-"+$("trTo").value+".txt",trOut).catch(function(){})};
+$("trDocx").onclick=function(){
+  if(!trOut) return;
+  docxFromMarkdown(trOut,!!TR_RTL[$("trTo").value]).then(function(blob){return saveFile(trName+"-"+$("trTo").value+".docx",blob)}).catch(function(){toast(L().dlFail)});
+};
+
+/* A minimal Word document (Office Open XML) built with JSZip: headings, bold, lists, RTL. */
+function xmlEsc(s){return String(s).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+function docxPara(line,rtl){
+  var m, size=0, prefix="";
+  if((m=line.match(/^(#{1,4})\s+(.*)$/))){size=[0,36,30,26,24][m[1].length]; line=m[2]}
+  else if((m=line.match(/^\s*[-*•]\s+(.*)$/))){prefix="• "; line=m[1]}
+  else if(/^\s*\|?\s*:?-{2,}/.test(line)&&/-\s*\|/.test(line)) return "";
+  else if(/^\s*\|.*\|\s*$/.test(line)){line=line.trim().replace(/^\||\|$/g,"").split("|").map(function(c){return c.trim()}).join("   |   ")}
+  var runs=(prefix+line).split(/(\*\*[^*]+\*\*)/).filter(Boolean).map(function(part){
+    var bold=/^\*\*[^*]+\*\*$/.test(part)||size>0, t=part.replace(/^\*\*|\*\*$/g,"").replace(/`/g,"");
+    return '<w:r><w:rPr>'+(bold?'<w:b/><w:bCs/>':'')+(size?'<w:sz w:val="'+size+'"/><w:szCs w:val="'+size+'"/>':'')+(rtl?'<w:rtl/>':'')+'</w:rPr><w:t xml:space="preserve">'+xmlEsc(t)+'</w:t></w:r>';
+  }).join("");
+  return '<w:p><w:pPr>'+(rtl?'<w:bidi/><w:jc w:val="right"/>':'')+'<w:spacing w:after="120"/></w:pPr>'+runs+'</w:p>';
+}
+async function docxFromMarkdown(md,rtl){
+  if(!window.JSZip) await loadScript(lib("jszip/3.10.1/jszip.min.js"));
+  var zip=new window.JSZip();
+  zip.file("[Content_Types].xml",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
+  zip.file("_rels/.rels",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
+  var body=md.split("\n").filter(function(l){return !/^```/.test(l)}).map(function(l){return l.trim()?docxPara(l,rtl):'<w:p/>'}).join("");
+  zip.file("word/document.xml",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'+body+'<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr></w:body></w:document>');
+  return zip.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
+}
+/* ================= My university: country -> university -> major -> courses, and the graduation tracker ================= */
+/* Data layers, from most to least trusted:
+   1. data/catalog/*.json  official study plans scraped from the university's own site (tools/fetch_aau.py)
+   2. AI search            Claude + web search limited to the university's domain, with sources shown
+   3. Manual               the student pastes or uploads their own study plan
+   The world list of universities (data/unis/*.json) comes from the open Hipo dataset (MIT). */
+var uniIdx=null, catIdx=null, uniCountry={}, catCache={}, uniCtl=null, uniBusyMsg="", uniFac="", uniQ="", uniShow="all", uniManualOpen=false;
+var uniDraft={name:"",text:""}, uniTyping=0, GROUP_ORDER=["university","faculty","major","ancillary","other","remedial","complementary"];
+
+function getJSON(path){return fetch("data/"+path).then(function(r){if(!r.ok) throw new Error(r.status); return r.json()})}
+function uniState(){var u=state.uni; if(!u.st||typeof u.st!=="object") u.st={}; if(!(u.perSem>=6)) u.perSem=15; return u}
+function regionName(cc){try{return new Intl.DisplayNames([state.lang==="en"?"en":"ar"],{type:"region"}).of(cc)}catch(e){return cc}}
+function loc(o){if(!o) return ""; if(typeof o==="string") return o; return (state.lang!=="en"&&o.ar)?o.ar:(o.en||o.ar||"")}
+function fold(s){return String(s||"").toLowerCase().normalize("NFKD").replace(/[\u064B-\u065F\u0670\u0300-\u036f]/g,"").replace(/[أإآ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي").replace(/[^\p{L}\p{N}]+/gu," ").trim()}
+function matches(hay,q){var h=fold(hay); return fold(q).split(" ").every(function(w){return !w||h.indexOf(w)>=0})}
+function safeUrl(u){return typeof u==="string"&&/^https:\/\/[^\s"<>]+$/.test(u)?u:""}
+function link(u,text){u=safeUrl(u); return u?'<a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer">'+esc(text||u)+'</a>':esc(text||"")}
+/* Best first guess for the country: the device's time zone, then the browser's region, then Jordan. */
+var TZ_CC={"Asia/Amman":"JO","Asia/Riyadh":"SA","Asia/Dubai":"AE","Asia/Kuwait":"KW","Asia/Qatar":"QA","Asia/Bahrain":"BH","Asia/Muscat":"OM","Africa/Cairo":"EG","Asia/Baghdad":"IQ","Asia/Damascus":"SY","Asia/Beirut":"LB","Asia/Gaza":"PS","Asia/Hebron":"PS","Africa/Casablanca":"MA","Africa/Algiers":"DZ","Africa/Tunis":"TN","Africa/Tripoli":"LY","Africa/Khartoum":"SD","Asia/Aden":"YE","Europe/Istanbul":"TR","Asia/Kuala_Lumpur":"MY","Europe/London":"GB","Europe/Berlin":"DE","Europe/Paris":"FR"};
+function guessCountry(){
+  var has=function(c){return c&&uniIdx.some(function(x){return x[0]===c})}, tz="";
+  try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||""}catch(e){}
+  if(has(TZ_CC[tz])) return TZ_CC[tz];
+  var m=(navigator.language||"").match(/-([A-Za-z]{2})$/), r=m?m[1].toUpperCase():"";
+  return has(r)?r:"JO";
+}
+function loadIndexes(){
+  if(uniIdx&&catIdx) return Promise.resolve();
+  return Promise.all([getJSON("unis/index.json"),getJSON("catalog/index.json")]).then(function(r){uniIdx=r[0]; catIdx=r[1]});
+}
+function catFor(dom){return (catIdx||[]).filter(function(c){return c.dom===dom})[0]||null}
+function loadCountry(cc){return uniCountry[cc]?Promise.resolve(uniCountry[cc]):getJSON("unis/"+cc+".json").then(function(a){uniCountry[cc]=a; return a})}
+function loadCat(id){return catCache[id]?Promise.resolve(catCache[id]):getJSON("catalog/"+id+".json").then(function(c){catCache[id]=c; return c})}
+
+function stepsHtml(n){
+  var l=L();
+  return '<ol class="steps">'+l.uniSteps.map(function(s,i){return '<li class="'+(i<n?"done":i===n?"on":"")+'"><b>'+(i<n?"✓":i+1)+'</b>'+esc(s)+'</li>'}).join("")+'</ol>';
+}
+function busyHtml(){
+  if(!uniBusyMsg) return "";
+  return '<div class="banner" style="margin-bottom:14px"><p role="status">'+esc(uniBusyMsg)+'</p><button class="btn sm ghost" type="button" data-u="stop">'+esc(L().stop)+'</button></div>';
+}
+function renderUni(){
+  var box=$("uniBody"), u=uniState(), l=L();
+  if(!IS_WEB){box.innerHTML='<p class="banner">'+esc(l.uniWebOnly)+'</p>'; return Promise.resolve()}
+  return loadIndexes().then(function(){
+    if(!u.dom) return renderUniPick();
+    if(!u.pid) return renderMajorPick();
+    return renderTracker();
+  }).catch(function(){box.innerHTML='<p class="error">'+esc(l.uniLoadFail)+'</p>'});
+}
+onRoute.uni=renderUni;
+
+/* ---------- step 1: country and university ---------- */
+function renderUniPick(){
+  var u=state.uni, l=L(), lang=state.lang==="en"?"en":"ar";
+  var cc=u.cc||guessCountry();
+  var countries=uniIdx.map(function(x){return {cc:x[0],n:x[1],name:regionName(x[0])}}).sort(function(a,b){return a.name.localeCompare(b.name,lang)});
+  $("uniBody").innerHTML=stepsHtml(0)+'<div class="sheet tape">'+
+    '<div class="row"><div class="field" style="flex:1 1 220px"><label for="uniCountry">'+esc(l.uniCountry)+'</label><select id="uniCountry">'+countries.map(function(c){return '<option value="'+esc(c.cc)+'"'+(c.cc===cc?" selected":"")+'>'+esc(c.name)+' ('+c.n+')</option>'}).join("")+'</select></div>'+
+    '<div class="field" style="flex:2 1 280px"><label for="uniSearch">'+esc(l.uniSearch)+'</label><input type="search" id="uniSearch" autocomplete="off" placeholder="'+esc(l.uniSearchP)+'" value="'+esc(uniQ)+'"></div></div>'+
+    '<ul class="pick" id="uniList" aria-label="'+esc(l.uniSearch)+'"></ul>'+
+    '<p class="soft small" style="margin:10px 0 0">'+esc(l.uniDataNote)+'</p></div>';
+  u.cc=cc; fillUniList();
+}
+function fillUniList(){
+  var l=L(), cc=state.uni.cc, list=$("uniList"); if(!list) return;
+  loadCountry(cc).then(function(arr){
+    if(state.uni.cc!==cc||!$("uniList")) return;
+    var rows=arr.map(function(x,i){var c=catFor(x[1]); return {i:i,name:x[0],dom:x[1],cat:c}}).filter(function(r){return matches(r.name+" "+r.dom+" "+(r.cat?r.cat.name.ar+" "+r.cat.name.en:""),uniQ)});
+    var phrase=fold(uniQ);
+    rows.forEach(function(r){var n=fold(r.name), at=phrase?n.indexOf(phrase):-1; r.score=(r.cat?4:0)+(at===0?2:0)+(at>=0?1:0)});
+    rows.sort(function(a,b){return (b.score-a.score)||(a.i-b.i)});
+    list.innerHTML=rows.length?rows.slice(0,300).map(function(r){
+      return '<li><button type="button" data-u="uni" data-i="'+r.i+'"><span><span class="rtl">'+esc(r.cat?loc(r.cat.name):r.name)+'</span><span class="sub">'+esc(r.cat&&state.lang!=="en"?r.name+" · "+r.dom:r.dom)+'</span></span>'+(r.cat?'<span class="vtag">✓ '+esc(l.uniVerified)+'</span>':'')+'</button></li>';
+    }).join(""):'<li class="empty">'+esc(l.uniNoMatch)+'</li>';
+  }).catch(function(){list.innerHTML='<li class="empty">'+esc(l.uniLoadFail)+'</li>'});
+}
+
+/* ---------- step 2: the major ---------- */
+function uniHeader(withMajor){
+  var u=state.uni, l=L(), c=catFor(u.dom);
+  return '<div class="uni-head"><div><h2>'+esc(c?loc(c.name):u.uname)+'</h2><p class="soft small">'+esc(regionName(u.cc))+' · <bdi>'+esc(u.dom)+'</bdi></p></div>'+
+    '<div class="actions">'+(withMajor?'<button class="btn sm ghost" type="button" data-u="chmajor">'+esc(l.uniChangeMajor)+'</button>':'')+'<button class="btn sm ghost" type="button" data-u="chuni">'+esc(l.uniChangeUni)+'</button></div></div>';
+}
+function renderMajorPick(){
+  var u=state.uni, l=L(), c=catFor(u.dom), box=$("uniBody");
+  if(c){
+    box.innerHTML=stepsHtml(1)+busyHtml()+'<div class="sheet tape mint">'+uniHeader(false)+'<p class="soft small" style="margin:6px 0 0">'+esc(l.uniLoading)+'</p></div>';
+    return loadCat(c.id).then(function(cat){
+      var facs=cat.faculties.map(function(f){return f.en});
+      var progs=cat.programs.filter(function(p){return (!uniFac||p.fac===uniFac)&&matches(p.en+" "+p.ar,uniQ)});
+      box.innerHTML=stepsHtml(1)+'<div class="sheet tape mint">'+uniHeader(false)+
+        '<p class="srcline"><span class="vtag">✓ '+esc(l.uniVerTag)+'</span> '+esc(l.uniSourceOff)+' '+link(cat.source,cat.domain)+' · '+esc(l.uniFetched(cat.fetched))+'</p>'+
+        '<div class="field" style="margin-top:12px"><label for="majSearch">'+esc(l.uniMajorQ)+'</label><input type="search" id="majSearch" autocomplete="off" placeholder="'+esc(l.uniMajorSearchP)+'" value="'+esc(uniQ)+'"></div>'+
+        '<div class="chips facs" role="group" aria-label="'+esc(l.uniFaculty)+'"><button type="button" data-u="fac" data-f="" aria-pressed="'+(!uniFac)+'">'+esc(l.uniAllFacs)+'</button>'+
+        cat.faculties.map(function(f){return '<button type="button" data-u="fac" data-f="'+esc(f.en)+'" aria-pressed="'+(uniFac===f.en)+'">'+esc(loc(f))+'</button>'}).join("")+'</div>'+
+        '<ul class="pick" aria-label="'+esc(l.uniMajorQ)+'">'+(progs.length?progs.map(function(p){
+          var f=cat.faculties[facs.indexOf(p.fac)];
+          return '<li><button type="button" data-u="prog" data-p="'+esc(p.id)+'"><span><span class="rtl">'+esc(loc(p))+'</span><span class="sub rtl">'+esc(loc(f))+' · '+esc(l.uniHours(p.hours))+(p.degree==="diploma"?" · "+esc(l.uniDiploma):"")+'</span></span><span class="soft small">'+(p.groups?esc(l.uniNCourses(p.groups.reduce(function(a,g){return a+g.c.length},0))):"")+'</span></button></li>';
+        }).join(""):'<li class="empty">'+esc(l.uniNoMatch)+'</li>')+'</ul>'+
+        '<p class="soft small" style="margin:10px 0 0">'+esc(l.uniNotListed)+' <button class="link" type="button" data-u="manual">'+esc(l.uniManual)+'</button></p>'+
+        (uniManualOpen?manualHtml():"")+mineHtml()+'</div>';
+    });
+  }
+  var ai=state.uniAi[u.dom];
+  var hasAI=!!sample;
+  box.innerHTML=stepsHtml(1)+busyHtml()+'<div class="sheet tape mint">'+uniHeader(false)+
+    '<p style="margin:12px 0 10px">'+esc(l.uniNoCat)+'</p>'+
+    '<div class="grad" style="margin-top:0">'+
+      '<div class="sheet"><h3>'+esc(l.uniAiFind)+'</h3><p class="soft small">'+esc(l.uniAiFindLede)+'</p>'+
+        (hasAI?'<button class="btn primary sm" type="button" data-u="aiprogs"'+(uniBusyMsg?" disabled":"")+'>'+esc(ai?l.uniAiAgain:l.uniAiFind)+'</button><p class="soft small" style="margin:8px 0 0">'+esc(l.uniCost)+'</p>':'<a class="btn sm primary" href="#tutor">'+esc(l.lensKeyBtn)+'</a> <span class="soft small">'+esc(l.lensNeedKey)+'</span>')+'</div>'+
+      '<div class="sheet"><h3>'+esc(l.uniManual)+'</h3><p class="soft small">'+esc(l.uniManualLede)+'</p><button class="btn sm" type="button" data-u="manual">'+esc(l.uniManual)+'</button></div>'+
+    '</div>'+
+    (uniManualOpen?manualHtml():"")+
+    (ai&&ai.programs.length?'<h3 style="margin:18px 0 0">'+esc(l.uniMajorQ)+' <span class="vtag ai">'+esc(l.uniAiTag)+'</span></h3><ul class="pick">'+ai.programs.map(function(p,i){
+      return '<li><button type="button" data-u="aiprog" data-i="'+i+'"><span><span class="rtl">'+esc(loc(p))+'</span><span class="sub rtl">'+esc(p.faculty||"")+'</span></span>'+(state.uniPlans[u.dom+"|ai:"+i]?'<span class="vtag ai">✓</span>':'')+'</button></li>';
+    }).join("")+'</ul>'+sourcesHtml(ai.sources):"")+
+    mineHtml()+'</div>';
+}
+function mineHtml(){
+  var u=state.uni, l=L(), mine=Object.keys(state.uniPlans).filter(function(k){return k.indexOf(u.dom+"|me:")===0});
+  return mine.length?'<h3 style="margin:18px 0 0">'+esc(l.uniMine)+'</h3><ul class="pick">'+mine.map(function(k){return '<li><button type="button" data-u="mine" data-k="'+esc(k)+'"><span class="rtl">'+esc(loc(state.uniPlans[k].name))+'</span><span class="vtag me">'+esc(l.uniMeTag)+'</span></button></li>'}).join("")+'</ul>':"";
+}
+function sourcesHtml(src){
+  if(!src||!src.length) return "";
+  return '<p class="srcline">'+esc(L().uniSources)+' '+src.slice(0,6).map(function(s){return link(s.url,(s.title||s.url).slice(0,70))}).join(" · ")+'</p>';
+}
+function manualHtml(){
+  var l=L();
+  return '<div class="sheet" style="margin-top:14px" id="uniManual"><h3>'+esc(l.uniManual)+'</h3>'+
+    '<div class="field"><label for="upName">'+esc(l.uniPlanName)+'</label><input type="text" id="upName" maxlength="120" autocomplete="off" value="'+esc(uniDraft.name)+'"></div>'+
+    '<div style="margin-top:10px"><label for="upText">'+esc(l.uniPlanText)+'</label><textarea id="upText" rows="6" maxlength="60000" placeholder="'+esc(l.uniPlanTextP)+'">'+esc(uniDraft.text)+'</textarea></div>'+
+    '<div class="row c" style="margin-top:10px;gap:10px"><label class="btn sm ghost" style="margin:0;color:var(--ink)"><svg><use href="#i-up"/></svg><span>'+esc(l.uniPlanFile)+'</span><input type="file" id="upFile" accept=".pdf,.docx,.xlsx,.txt,.csv" hidden></label>'+
+    '<button class="btn sm primary" type="button" data-u="manualgo">'+esc(l.uniPlanGo)+'</button></div></div>';
+}
+
+/* ---------- plans: one shape for every source ---------- */
+/* plan = {name, groups:[{g,k,h,c:[ids]}], courses:{id:{en,ar,cr}}, pre:{id:[ids]}, total, source, sources, tag} */
+function groupKey(name){
+  var n=fold(name);
+  if(/remedial|استدراك/.test(n)) return "remedial";
+  if(/complementary|تكميل/.test(n)) return "complementary";
+  if(/universit|جامع/.test(n)) return "university";
+  if(/facult|college|school|كليه/.test(n)) return "faculty";
+  if(/ancillar|support|مساند/.test(n)) return "ancillary";
+  if(/major|special|department|program|تخصص|قسم/.test(n)) return "major";
+  return "other";
+}
+function num(x,max){x=+x; return isFinite(x)&&x>0&&x<=max?Math.round(x):null}
+function str(x,max){return typeof x==="string"?x.replace(/\s+/g," ").trim().slice(0,max):""}
+function planFromJson(j,name){
+  var courses={}, groups=[], byKey={}, n=0, pending=[];
+  (Array.isArray(j&&j.groups)?j.groups:[]).slice(0,30).forEach(function(g){
+    var ids=[];
+    (Array.isArray(g&&g.courses)?g.courses:[]).forEach(function(c){
+      if(n>=300) return;
+      var nm=str(c&&c.name,160); if(!nm) return;
+      var code=str(c.code,24).replace(/[^\w\- ]/g,""), id=code||("x"+(++n));
+      if(courses[id]) id=id+"_"+(++n); else n++;
+      courses[id]={en:nm,ar:/[\u0600-\u06FF]/.test(nm)?nm:"",cr:num(c.cr,30)||0,code:code};
+      byKey[fold(nm)]=id; if(code) byKey[fold(code)]=id;
+      if(Array.isArray(c.pre)) pending.push([id,c.pre]);
+      ids.push(id);
+    });
+    if(ids.length) groups.push({g:groupKey(str(g.name,80)),label:str(g.name,80),k:/elect|اختيار/i.test(String(g.kind||"")+" "+String(g.name||""))?"elective":"compulsory",h:num(g.hours,120),c:ids});
+  });
+  var pre={};
+  pending.forEach(function(p){var ids=p[1].map(function(x){return byKey[fold(String(x))]}).filter(function(x){return x&&x!==p[0]}); if(ids.length) pre[p[0]]=ids});
+  return {name:{en:name,ar:/[\u0600-\u06FF]/.test(name)?name:""},groups:groups,courses:courses,pre:pre,total:num(j&&j.total_hours,250),source:safeUrl(j&&j.source)};
+}
+function parsePlanLocally(text,name){
+  var groups=[{name:"",kind:"compulsory",courses:[]}];
+  text.split(/\n/).forEach(function(line){
+    var t=line.replace(/[|\t]+/g," ").replace(/\s+/g," ").trim(), m;
+    if(!t) return;
+    if((m=t.match(/^([A-Za-z]{0,6}\s?-?\d{3,9})\s+(.+?)\s+(\d{1,2})(?:\s|$)/))) groups[0].courses.push({code:m[1],name:m[2],cr:+m[3]});
+    else if((m=t.match(/^(.{3,120}?)\s+(\d{1,2})$/))) groups[0].courses.push({name:m[1],cr:+m[2]});
+  });
+  return planFromJson({groups:groups},name);
+}
+function getPlan(){
+  var u=state.uni;
+  if(u.src==="cat") return loadCat(u.cat).then(function(cat){
+    var p=cat.programs.filter(function(x){return x.id===u.pid})[0]; if(!p) return null;
+    return {name:{en:p.en,ar:p.ar},groups:p.groups||[],courses:cat.courses,pre:p.pre||{},total:p.hours,source:p.plan||p.page||cat.source,fetched:cat.fetched,tag:"ver"};
+  });
+  var p=state.uniPlans[u.dom+"|"+u.pid];
+  return Promise.resolve(p?Object.assign({tag:u.src==="ai"?"ai":"me"},p):null);
+}
+
+/* ---------- graduation maths ---------- */
+function crOf(plan,id){return (plan.courses[id]||{}).cr||0}
+function counted(g){return g.g!=="remedial"&&g.g!=="complementary"}
+function planStats(plan){
+  var st=state.uni.st, need=0, got=0, bars={}, order=[];
+  plan.groups.forEach(function(g){
+    if(!counted(g)) return;
+    var all=g.c.reduce(function(a,id){return a+crOf(plan,id)},0), req=g.h||all;
+    var done=Math.min(req,g.c.reduce(function(a,id){return a+(st[id]==="d"?crOf(plan,id):0)},0));
+    var key=g.g==="other"?"o:"+loc(g.label):g.g;
+    if(!bars[key]){bars[key]={g:g.g,label:g.label,req:0,done:0}; order.push(key)}
+    bars[key].req+=req; bars[key].done+=done; need+=req; got+=done;
+  });
+  var total=plan.total||need;
+  return {total:total,got:Math.min(got,total),left:Math.max(0,total-got),pct:total?Math.min(100,Math.round(got/total*100)):0,bars:order.map(function(k){return bars[k]})};
+}
+function level(id){var m=String(id).match(/(\d)\d\d$/); return m?+m[1]:9}
+/* Remedial courses depend on a placement test (many students are exempt), so they never block a course. */
+function remedialSet(plan){
+  if(!plan._rem){plan._rem={}; plan.groups.forEach(function(g){if(g.g==="remedial") g.c.forEach(function(id){plan._rem[id]=1})})}
+  return plan._rem;
+}
+function missingPre(plan,id){var rem=remedialSet(plan); return (plan.pre[id]||[]).filter(function(p){return plan.courses[p]&&!rem[p]&&state.uni.st[p]!=="d"})}
+function available(plan){
+  var st=state.uni.st, seen={}, out=[];
+  plan.groups.forEach(function(g,gi){
+    if(!counted(g)) return;
+    if(g.k==="elective"&&g.h){var d=g.c.reduce(function(a,id){return a+(st[id]==="d"?crOf(plan,id):0)},0); if(d>=g.h) return}
+    g.c.forEach(function(id){
+      if(st[id]||seen[id]||missingPre(plan,id).length) return;
+      seen[id]=1; out.push({id:id,el:g.k==="elective",lvl:level(id),gi:gi});
+    });
+  });
+  out.sort(function(a,b){return (a.el-b.el)||(a.lvl-b.lvl)||(a.gi-b.gi)});
+  var room=state.uni.perSem;
+  out.forEach(function(x){var c=crOf(plan,x.id); if(!x.el&&c<=room){x.pick=true; room-=c}});
+  out.forEach(function(x){var c=crOf(plan,x.id); if(x.el&&c<=room&&!out.some(function(y){return y.pick&&y.el&&y.gi===x.gi})){x.pick=true; room-=c}});
+  return out;
+}
+function courseName(plan,id){return loc(plan.courses[id])||id}
+
+/* ---------- step 3: my courses and the tracker ---------- */
+var uniPlanNow=null;
+function renderTracker(){
+  var l=L(), u=uniState(), box=$("uniBody");
+  return getPlan().then(function(plan){
+    uniPlanNow=plan;
+    if(!plan){u.pid=""; save(); return renderMajorPick()}
+    if(!plan.groups.length){
+      box.innerHTML=stepsHtml(2)+'<div class="sheet tape">'+uniHeader(true)+'<h3 style="margin-top:12px">'+esc(loc(plan.name))+'</h3><p class="banner">'+esc(l.uniNoPlan)+' '+link(plan.source,l.uniOpenSource)+'</p><button class="btn sm" type="button" data-u="manual">'+esc(l.uniManual)+'</button>'+(uniManualOpen?manualHtml():"")+'</div>';
+      return;
+    }
+    var s=planStats(plan), av=available(plan), now=Object.keys(u.st).filter(function(id){return u.st[id]==="n"&&plan.courses[id]});
+    var sems=Math.ceil(s.left/u.perSem), tag={ver:['',l.uniVerTag],ai:[' ai',l.uniAiTag],me:[' me',l.uniMeTag]}[plan.tag];
+    var perSel='<select id="uniPerSem" style="width:auto;min-height:36px;display:inline-block" aria-label="'+esc(l.gradPerSem)+'">'+[9,12,15,18,21].map(function(h){return '<option'+(h===u.perSem?" selected":"")+'>'+h+'</option>'}).join("")+'</select>';
+    var html=stepsHtml(2)+'<div class="sheet tape">'+uniHeader(true)+
+      '<div class="row c" style="justify-content:space-between;margin-top:12px;gap:8px"><h2 style="margin:0;font-size:1.15rem">'+esc(loc(plan.name))+'</h2><span class="vtag'+tag[0]+'">'+(plan.tag==="ver"?"✓ ":"")+esc(tag[1])+'</span></div>'+
+      '<p class="srcline">'+(plan.source?esc(plan.tag==="ver"?l.uniSourceOff:l.uniSources)+' '+link(plan.source,l.uniOpenSource):"")+(plan.fetched?' · '+esc(l.uniFetched(plan.fetched)):"")+'</p>'+
+      (plan.sources?sourcesHtml(plan.sources):"")+'</div>'+
+      '<div class="grad">'+
+        '<div class="sheet tape mint"><h3>'+esc(l.gradH)+'</h3><div class="bigpct">'+s.pct+'%</div>'+
+          '<div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+s.pct+'" aria-label="'+esc(l.gradH)+'"><i style="width:'+s.pct+'%"></i></div>'+
+          '<p style="margin:8px 0 0">'+esc(l.gradDone(s.got,s.total))+' · <b>'+esc(l.gradLeft(s.left))+'</b></p>'+
+          (s.left?'<p class="soft small" style="margin:6px 0 0">'+esc(l.gradSem(sems))+' '+perSel+' '+esc(l.gradPerSem)+'</p>':'<p style="margin:6px 0 0">'+esc(l.gradAll)+'</p>')+
+          '<div class="gbars">'+s.bars.map(function(b){var p=b.req?Math.round(b.done/b.req*100):0; return '<div class="gbar"><div class="row c"><span>'+esc(b.g!=="other"&&l.grp[b.g]||loc(b.label)||l.grp.other)+'</span><span class="soft small">'+esc(l.ofH(b.done,b.req))+'</span></div><div class="progress"><i style="width:'+p+'%"></i></div></div>'}).join("")+'</div>'+
+          (plan.groups.some(function(g){return g.g==="remedial"})?'<p class="soft small" style="margin:10px 0 0">'+esc(l.gradRem)+'</p>':"")+
+        '</div>'+
+        '<div class="sheet tape pink"><h3>'+esc(l.nextH)+'</h3><p class="soft small" style="margin:2px 0 0">'+esc(l.nextLede(u.perSem))+'</p>'+
+          (Object.keys(u.st).length?(av.length?'<ul class="nextlist">'+av.slice(0,14).map(function(x){return '<li><span>'+(x.pick?'★ ':'')+esc(courseName(plan,x.id))+(x.el?' <span class="soft small">('+esc(l.kind.elective)+')</span>':'')+'</span><span class="soft small">'+crOf(plan,x.id)+' '+esc(l.crH)+'</span></li>'}).join("")+'</ul><p class="soft small" style="margin:6px 0 0">'+esc(l.nextStar)+'</p>':'<p>'+esc(l.gradAll)+'</p>'):'<p class="soft small">'+esc(l.nextNone)+'</p>')+
+          '<h3 style="margin-top:16px">'+esc(l.nowH)+'</h3>'+
+          (now.length?'<ul class="nextlist">'+now.map(function(id){return '<li><span>'+esc(courseName(plan,id))+'</span><span class="soft small">'+crOf(plan,id)+' '+esc(l.crH)+'</span></li>'}).join("")+'</ul><button class="btn sm primary" type="button" data-u="toplan" style="margin-top:10px">'+esc(l.nowAdd)+'</button>':'<p class="soft small">'+esc(l.nowNone)+'</p>')+
+        '</div>'+
+      '</div>'+
+      '<div class="row c" style="margin-top:18px;gap:10px;flex-wrap:wrap"><div class="seg" role="group" style="max-width:320px">'+
+        ['all','left','now','done'].map(function(f){return '<button type="button" data-u="show" data-f="'+f+'" aria-pressed="'+(uniShow===f)+'">'+esc(l.uniShow[f])+'</button>'}).join("")+'</div>'+
+        '<div class="field" style="flex:1 1 220px"><input type="search" id="crsSearch" autocomplete="off" placeholder="'+esc(l.searchCourse)+'" aria-label="'+esc(l.searchCourse)+'" value="'+esc(uniQ)+'"></div></div>'+
+      groupsHtml(plan)+
+      '<p class="soft small" style="margin-top:16px"><button class="link" type="button" data-u="reset">'+esc(l.uniReset)+'</button></p>';
+    box.innerHTML=html;
+  });
+}
+function groupsHtml(plan){
+  var l=L(), st=state.uni.st, out="";
+  var gs=plan.groups.map(function(g,i){return {g:g,i:i}}).sort(function(a,b){return (GROUP_ORDER.indexOf(a.g.g)-GROUP_ORDER.indexOf(b.g.g))||(a.i-b.i)});
+  gs.forEach(function(x){
+    var g=x.g, ids=g.c.filter(function(id){
+      var s=st[id]||"";
+      if(uniShow==="left"&&s==="d") return false;
+      if(uniShow==="now"&&s!=="n") return false;
+      if(uniShow==="done"&&s!=="d") return false;
+      var c=plan.courses[id]||{}; return matches((c.en||"")+" "+(c.ar||"")+" "+id,uniQ);
+    });
+    if(!ids.length) return;
+    var title=(loc(g.label)||l.grp[g.g]||l.grp.other)+" · "+l.kind[g.k];
+    out+='<section class="grp"><h3><span>'+esc(title)+'</span><span class="soft small">'+(g.k==="elective"&&g.h?esc(l.grpElect(g.h)):(g.h?esc(l.uniHours(g.h)):""))+'</span></h3><ul class="crs">'+ids.map(function(id){
+      var c=plan.courses[id]||{}, s=st[id]||"", miss=missingPre(plan,id), pre=plan.pre[id]||[], other=state.lang!=="en"?c.en:c.ar;
+      return '<li class="'+(s==="d"?"done":s==="n"?"now":"")+'"><div><span class="nm">'+esc(loc(c)||id)+'</span>'+
+        '<span class="meta">'+(c.code!==""&&!/^x\d/.test(id)?'<bdi>'+esc(c.code||id)+'</bdi> · ':'')+(c.cr||"?")+' '+esc(l.crH)+(other&&other!==loc(c)?' · <bdi>'+esc(other)+'</bdi>':'')+'</span>'+
+        (pre.length?'<span class="meta'+(miss.length&&s!=="d"?' lock':'')+'">'+esc(l.prereq)+' '+pre.map(function(p){return esc(courseName(plan,p))}).join("، ")+'</span>':'')+
+        '</div><div class="st" role="group" aria-label="'+esc(loc(c)||id)+'">'+["","n","d"].map(function(v,k){return '<button type="button" data-u="st" data-c="'+esc(id)+'" data-v="'+v+'" aria-pressed="'+(s===v)+'">'+esc(l.st[k])+'</button>'}).join("")+'</div></li>';
+    }).join("")+'</ul></section>';
+  });
+  return out||'<p class="empty">'+esc(l.uniNoMatch)+'</p>';
+}
+
+/* ---------- AI: find majors and study plans on the university's own website ---------- */
+function parseJsonBlock(text){
+  var m=String(text||"").match(/```(?:json)?\s*([\s\S]*?)```/), t=m?m[1]:String(text||""), a=t.indexOf("{"), b=t.lastIndexOf("}");
+  if(a<0||b<a) return null; try{return JSON.parse(t.slice(a,b+1))}catch(e){return null}
+}
+function uniBusy(msg){uniBusyMsg=msg; uniCtl=msg?new AbortController():uniCtl; renderUni()}
+function uniFail(e){var l=L(); uniBusyMsg=""; if(!(e&&e.code==="cancelled")) toast(errCopy(e)); renderUni()}
+function aiPrograms(){
+  var u=state.uni, l=L(); if(!sample) return;
+  uniBusy(l.uniAiSearching);
+  var prompt="Find the current list of undergraduate programs (bachelor's degrees and diplomas) offered by "+u.uname+", using web search on its official website ("+u.dom+"). Use only what the official site says, and keep the program names exactly as the site writes them.\n"+
+    "Reply with one short sentence, then a JSON code block exactly like:\n```json\n{\"programs\":[{\"en\":\"program name in English\",\"ar\":\"Arabic name if the site gives one, else empty\",\"faculty\":\"faculty or college\",\"url\":\"official page URL\"}]}\n```\nIf you cannot find an official list, return {\"programs\":[]}.";
+  sample.search(prompt,{domains:[u.dom],effort:"medium",maxUses:6,signal:uniCtl.signal}).then(function(r){
+    var j=parseJsonBlock(r.text), progs=(j&&Array.isArray(j.programs)?j.programs:[]).map(function(p){
+      var en=str(p&&p.en,150), ar=str(p&&p.ar,150); return en||ar?{en:en||ar,ar:ar,faculty:str(p.faculty,150),url:safeUrl(p.url)}:null;
+    }).filter(Boolean).slice(0,160);
+    state.uniAi[u.dom]={programs:progs,sources:r.sources,at:Date.now()}; save();
+    uniBusyMsg=""; if(!progs.length) toast(l.uniAiNone); renderUni();
+  }).catch(uniFail);
+}
+function aiCourses(i){
+  var u=state.uni, l=L(), p=state.uniAi[u.dom].programs[i], key=u.dom+"|ai:"+i;
+  if(state.uniPlans[key]){if(u.pid!=="ai:"+i) u.st={}; u.pid="ai:"+i; u.src="ai"; save(); return renderUni()}
+  if(!sample) return;
+  uniBusy(l.uniAiCourses);
+  var prompt="Find the official study plan (curriculum) of the \""+(p.en||p.ar)+"\" program at "+u.uname+", using web search on its official website ("+u.dom+")"+(p.url?"; its program page is "+p.url:"")+". List every course in the plan with its code, name and credit hours exactly as the site gives them, grouped as the site groups them (for example university, faculty and major requirements; compulsory or elective). Do not add courses that are not in the official plan.\n"+
+    "Reply with one short sentence, then a JSON code block exactly like:\n```json\n{\"total_hours\":132,\"source\":\"URL of the study plan\",\"groups\":[{\"name\":\"Major requirements\",\"kind\":\"compulsory\",\"hours\":48,\"courses\":[{\"code\":\"CS101\",\"name\":\"Introduction to Programming\",\"cr\":3,\"pre\":[\"code of each prerequisite\"]}]}]}\n```\nUse null for anything the site does not state. If the plan is not published online, return {\"groups\":[]}.";
+  sample.search(prompt,{domains:[u.dom],effort:"high",maxUses:8,maxTokens:48000,signal:uniCtl.signal}).then(function(r){
+    var plan=planFromJson(parseJsonBlock(r.text),p.en||p.ar);
+    uniBusyMsg="";
+    if(!Object.keys(plan.courses).length){toast(l.uniAiNoPlan); uniManualOpen=true; return renderUni()}
+    plan.name={en:p.en,ar:p.ar}; plan.sources=r.sources; plan.at=Date.now();
+    state.uniPlans[key]=plan; u.pid="ai:"+i; u.src="ai"; u.st={}; save(); renderUni();
+  }).catch(uniFail);
+}
+async function manualGo(){
+  var l=L(), u=state.uni, name=($("upName").value||"").trim(), text=($("upText").value||"").trim();
+  if(!name||text.length<20){toast(l.uniPlanNone); return}
+  var plan;
+  if(sample){
+    uniBusy(l.uniExtracting);
+    try{
+      var j=await sample.json("Extract the study plan below into JSON. Copy course codes, names and credit hours exactly; keep the groups it uses (university, faculty, major, elective...). Do not add courses.\nStudy plan:\n\"\"\"\n"+text.slice(0,50000)+"\n\"\"\"\nReturn JSON only: {\"total_hours\":null,\"groups\":[{\"name\":\"\",\"kind\":\"compulsory\",\"hours\":null,\"courses\":[{\"code\":\"\",\"name\":\"\",\"cr\":3,\"pre\":[]}]}]}",{effort:"medium",signal:uniCtl.signal});
+      plan=planFromJson(j,name);
+    }catch(e){if(e&&e.code==="cancelled"){uniBusyMsg=""; return renderUni()} plan=parsePlanLocally(text,name)}
+    uniBusyMsg="";
+  }else plan=parsePlanLocally(text,name);
+  if(!Object.keys(plan.courses).length){toast(l.uniPlanNone); return renderUni()}
+  var key=u.dom+"|me:"+Date.now().toString(36);
+  plan.at=Date.now(); state.uniPlans[key]=plan; u.pid=key.split("|")[1]; u.src="me"; u.st={}; uniManualOpen=false; uniDraft={name:"",text:""}; save(); renderUni();
+}
+
+/* ---------- events (one delegated listener for the whole page) ---------- */
+$("uniBody").addEventListener("click",function(e){
+  var b=e.target.closest("[data-u]"); if(!b) return;
+  var a=b.dataset.u, u=uniState(), l=L();
+  if(a==="uni"){var r=uniCountry[u.cc][+b.dataset.i], c=catFor(r[1]); state.uni={cc:u.cc,dom:r[1],uname:r[0],cat:c?c.id:"",st:{},perSem:u.perSem}; uniQ=""; uniFac=""; save(); renderUni(); window.scrollTo(0,0)}
+  else if(a==="fac"){uniFac=b.dataset.f; renderUni()}
+  else if(a==="prog"){u.pid=b.dataset.p; u.src="cat"; u.st={}; uniQ=""; uniShow="all"; save(); renderUni(); window.scrollTo(0,0)}
+  else if(a==="aiprogs") aiPrograms();
+  else if(a==="aiprog"){uniQ=""; aiCourses(+b.dataset.i)}
+  else if(a==="mine"){var pid=b.dataset.k.split("|")[1]; if(u.pid!==pid) u.st={}; u.pid=pid; u.src="me"; uniQ=""; save(); renderUni()}
+  else if(a==="manual"){uniManualOpen=!uniManualOpen; renderUni()}
+  else if(a==="manualgo") manualGo();
+  else if(a==="stop"){if(uniCtl) uniCtl.abort()}
+  else if(a==="chmajor"){u.pid=""; u.src=""; uniQ=""; uniFac=""; save(); renderUni()}
+  else if(a==="chuni"){state.uni={cc:u.cc,perSem:u.perSem,st:{}}; uniQ=""; uniFac=""; save(); renderUni()}
+  else if(a==="show"){uniShow=b.dataset.f; renderUni()}
+  else if(a==="reset"){if(confirm(l.uniResetAsk)){u.st={}; save(); renderUni()}}
+  else if(a==="st"){var id=b.dataset.c, v=b.dataset.v; if(v) u.st[id]=v; else delete u.st[id]; save(); renderUni()}
+  else if(a==="toplan"){
+    var plan=uniPlanNow, n=0; if(!plan) return;
+    Object.keys(u.st).filter(function(id){return u.st[id]==="n"&&plan.courses[id]}).forEach(function(id){
+      var nm=courseName(plan,id); if(state.subjects.some(function(s){return norm2(s.name)===norm2(nm)})) return;
+      var blank=state.subjects.filter(function(s){return !s.name||!s.name.trim()})[0];
+      if(blank) blank.name=nm; else addSubject({name:nm}); n++;
+    });
+    if(!state.tutor.major) state.tutor.major=loc(plan.name);
+    save(); renderForm(); renderNav(); toast(n?l.nowAdded(n):l.nowAlready);
+  }
+});
+$("uniBody").addEventListener("input",function(e){
+  var id=e.target.id;
+  if(id==="upName") uniDraft.name=e.target.value;
+  else if(id==="upText") uniDraft.text=e.target.value;
+  else if(id==="uniSearch"){uniQ=e.target.value; fillUniList()}
+  else if(id==="majSearch"||id==="crsSearch"){
+    uniQ=e.target.value; var pos=e.target.selectionStart;
+    clearTimeout(uniTyping);
+    uniTyping=setTimeout(function(){
+      renderUni().then(function(){var el=$(id); if(el){el.focus(); try{el.setSelectionRange(pos,pos)}catch(x){}}});
+    },220);
+  }
+});
+$("uniBody").addEventListener("change",function(e){
+  var id=e.target.id, u=uniState();
+  if(id==="uniCountry"){u.cc=e.target.value; uniQ=""; var s=$("uniSearch"); if(s) s.value=""; save(); fillUniList()}
+  else if(id==="uniPerSem"){u.perSem=+e.target.value||15; save(); renderUni()}
+  else if(id==="upFile"){
+    var f=e.target.files&&e.target.files[0]; e.target.value=""; if(!f) return;
+    readFile(f).then(function(t){uniDraft.text=String(t).slice(0,60000); if(!uniDraft.name) uniDraft.name=f.name.replace(/\.[^.]+$/,""); $("upText").value=uniDraft.text; $("upName").value=uniDraft.name},function(){toast(L().readFail(f.name))});
+  }
+});
 /* ================= MASCOT ================= */
 function owlSvg(cls,attrs){
   return '<svg class="owl mark '+(cls||"")+'" viewBox="0 0 64 64" '+(attrs||"")+' aria-hidden="true"><rect x="1" y="1" width="62" height="62" rx="17" fill="#18284D" stroke="rgba(255,255,255,.16)" stroke-width="1.5"/><path d="M13 47c11-5 26-5 38-2" stroke="#FFE14D" stroke-width="7" stroke-linecap="round" fill="none"/><path d="M21 16 32 30 43 16M32 30v17" stroke="#FFFFFF" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path class="spark" d="M50 9.5l1.7 4.3 4.3 1.7-4.3 1.7-1.7 4.3-1.7-4.3-4.3-1.7 4.3-1.7z" fill="#7FE3B2"/></svg>';
@@ -1134,7 +1920,7 @@ function catGroups(o){
 }
 
 /* ================= LANDING ================= */
-var FEAT_IC=["i-plan","i-stats","i-focus","i-tutor","i-today","i-review","i-fire","i-grades"];
+var FEAT_IC=["i-plan","i-stats","i-focus","i-tutor","i-today","i-review","i-fire","i-grades","i-cam","i-tr","i-uni","i-flag"];
 function renderLanding(){
   var l=L();
   $("featGrid").innerHTML=l.feats.map(function(f,i){return '<article class="fcard reveal"><div class="ic" style="background:var('+HL[i%6]+')"><svg><use href="#'+FEAT_IC[i]+'"/></svg></div><h3>'+esc(f[0])+'</h3><p>'+esc(f[1])+'</p></article>'}).join("");
@@ -1339,15 +2125,19 @@ function makeSample(key){
     else if(e instanceof A.APIConnectionError) c="network";
     return {code:c,message:(e&&e.message)||"",text:text||""};
   }
-  function run(input,opts){
-    opts=opts||{}; var text="";
-    var effort=opts.effort||(opts.modelTier==="complex"?"high":"medium");
-    var stream=client.beta.messages.stream({
+  function params(input,opts,extra){
+    var p={
       model:"claude-opus-5-5", max_tokens:opts.maxTokens||64000,
-      output_config:{effort:effort},
+      output_config:{effort:opts.effort||(opts.modelTier==="complex"?"high":"medium")},
       betas:["server-side-fallback-2026-07-01"], fallbacks:"default",
       messages:toMsgs(input)
-    },{signal:opts.signal});
+    };
+    if(opts.system) p.system=opts.system;
+    return Object.assign(p,extra||{});
+  }
+  function run(input,opts){
+    opts=opts||{}; var text="";
+    var stream=client.beta.messages.stream(params(input,opts),{signal:opts.signal});
     stream.on("error",function(){});
     stream.on("text",function(delta){text+=delta; if(opts.onText) opts.onText({text:text,delta:delta})});
     return stream.finalMessage().then(function(msg){
@@ -1357,6 +2147,35 @@ function makeSample(key){
     },function(e){throw (e&&e.code&&!(e instanceof Error))?e:mapErr(e,text)});
   }
   var fn=function(input,opts){return run(input,opts)};
+  /* Web search on Anthropic's servers, limited to the given domains. Claude reads the pages,
+     answers, and we keep the URLs it used so the student can check them. */
+  fn.search=function(input,opts){
+    opts=opts||{}; var msgs=params(input,opts).messages.slice(), text="", rounds=0, found=[], cited=[], fail="";
+    var tool={type:"web_search_20260209",name:"web_search",max_uses:opts.maxUses||8};
+    if(opts.domains&&opts.domains.length) tool.allowed_domains=opts.domains;
+    function step(){
+      var stream=client.beta.messages.stream(params(msgs,opts,{max_tokens:opts.maxTokens||32000,tools:[tool]}),{signal:opts.signal});
+      stream.on("error",function(){});
+      stream.on("text",function(delta){text+=delta; if(opts.onText) opts.onText({text:text,delta:delta})});
+      return stream.finalMessage().then(function(msg){
+        msg.content.forEach(function(b){
+          if(b.type==="web_search_tool_result"){
+            if(Array.isArray(b.content)) b.content.forEach(function(r){if(r&&r.url) found.push({url:r.url,title:r.title||""})});
+            else if(b.content&&b.content.error_code) fail=b.content.error_code;
+          }
+          if(b.type==="text"&&Array.isArray(b.citations)) b.citations.forEach(function(c){if(c&&c.url) cited.push({url:c.url,title:c.title||""})});
+        });
+        if(msg.stop_reason==="refusal") throw {code:"refused",text:text};
+        if(msg.stop_reason==="pause_turn"&&rounds++<4){msgs.push({role:"assistant",content:msg.content}); return step()}
+        var seen={}, sources=(cited.length?cited:found).filter(function(x){if(seen[x.url]) return false; seen[x.url]=1; return /^https:\/\//.test(x.url)});
+        return {text:text,sources:sources.slice(0,12),searchError:fail};
+      },function(e){
+        if(e&&e.status===400&&/web.?search/i.test(e.message||"")) throw {code:"web_off",text:text};
+        throw (e&&e.code&&!(e instanceof Error))?e:mapErr(e,text);
+      });
+    }
+    return step();
+  };
   fn.json=function(input,opts){
     return run(input,opts).then(function(r){
       var t=r.text, a=t.indexOf("{"), b=t.lastIndexOf("}");
@@ -1370,6 +2189,7 @@ function enableAI(fn){
   sample=fn; sampleChecked=true;
   $("coach").hidden=false; $("tutorNote").hidden=true; $("tutor").classList.remove("basic");
   document.body.classList.remove("noai");
+  if(route==="lens"||route==="uni") onRoute[route]();   // the key can finish loading after the page drew
 }
 function activateKey(k,remember,silent){
   var l=L();
@@ -1479,13 +2299,22 @@ function mdInline(s){
   return s.replace(/`([^`]+)`/g,"<code>$1</code>").replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>");
 }
 function renderMd(text){
-  var lines=esc(text).split("\n"), out=[], list=null, code=null;
-  function closeList(){if(list){out.push("</"+list+">"); list=null}}
+  var lines=esc(text).split("\n"), out=[], list=null, code=null, table=null;
+  function closeTable(){if(table){out.push('<div class="tbl"><table>'+table.join("")+'</table></div>'); table=null}}
+  function closeList(){closeTable(); if(list){out.push("</"+list+">"); list=null}}
+  function cells(ln){return ln.trim().replace(/^\||\|$/g,"").split("|").map(function(c){return mdInline(c.trim())})}
   lines.forEach(function(raw){
     var ln=raw.replace(/\s+$/,"");
     if(/^```/.test(ln)){if(code!==null){out.push("<pre><code>"+code.join("\n")+"</code></pre>"); code=null} else {closeList(); code=[]} return}
     if(code!==null){code.push(raw); return}
     var m;
+    if(/^\s*\|.*\|\s*$/.test(ln)){
+      if(/^\s*\|?[\s:|-]+\|?\s*$/.test(ln)&&/-/.test(ln)) return;
+      if(!table){closeList(); table=[]; table.push("<tr>"+cells(ln).map(function(c){return "<th>"+c+"</th>"}).join("")+"</tr>"); return}
+      table.push("<tr>"+cells(ln).map(function(c){return "<td>"+c+"</td>"}).join("")+"</tr>"); return;
+    }
+    closeTable();
+    if(/^\s*(-{3,}|\*{3,})\s*$/.test(ln)){closeList(); out.push("<hr>"); return}
     if((m=ln.match(/^#{1,4}\s+(.*)$/))){closeList(); out.push("<h4>"+mdInline(m[1])+"</h4>"); return}
     if((m=ln.match(/^\s*[-*•]\s+(.*)$/))){if(list!=="ul"){closeList(); out.push("<ul>"); list="ul"} out.push("<li>"+mdInline(m[1])+"</li>"); return}
     if((m=ln.match(/^\s*\d+[.)]\s+(.*)$/))){if(list!=="ol"){closeList(); out.push("<ol>"); list="ol"} out.push("<li>"+mdInline(m[1])+"</li>"); return}
@@ -1501,7 +2330,7 @@ function chatSystem(useFiles){
   var courses=(current?current.subs:[]).map(function(s){return s.name+" (exam in "+diffDays(t,s.d)+" days, readiness "+readiness(find(s.id)||s)+"%)"}).join("; ");
   var notes=useFiles?$("tNotes").value.trim().slice(0,30000):"";
   return ["You are Younis (يونس), an expert and warm study tutor inside an exam-preparation platform for Arab students.",
-    "Student: "+(p.name||"(no name given)")+"; level: "+(uni?"university":"school")+(p.major?"; major: "+p.major:"")+(courses?"; courses: "+courses:"")+"; today: "+iso(t)+".",
+    "Student: "+(p.name||"(no name given)")+"; level: "+(uni?"university":"school")+(state.uni&&state.uni.uname?"; university: "+state.uni.uname:"")+(p.major?"; major: "+p.major:"")+(courses?"; courses: "+courses:"")+"; today: "+iso(t)+".",
     "How you answer:",
     "1. Accuracy first. Rely on standard textbook knowledge and be exact with definitions, formulas, numbers and units. If you are not sure, say so plainly and say how to check. Never invent sources, quotes or statistics.",
     "2. Structure every substantive answer: open with a direct answer in one or two sentences, then short headed sections, numbered steps for procedures, a worked example where it helps, the common exam mistakes when relevant, and close with one short question that checks understanding.",
@@ -1620,7 +2449,7 @@ function renderImport(){
   }).join("")+'</ul><button class="btn primary sm" type="button" id="impAdd" style="margin-top:10px">'+esc(l.impAdd)+'</button>';
 }
 $("impToggle").onclick=function(){var p=$("impPanel"); p.hidden=!p.hidden; if(!p.hidden) $("impText").focus()};
-$("impFile").addEventListener("change",async function(){
+$("ttFile").addEventListener("change",async function(){
   var f=this.files&&this.files[0]; this.value=""; if(!f) return;
   if(f.size>25*1024*1024){toast(L().fileBig(f.name)); return}
   try{var txt=await readFile(f); $("impText").value=($("impText").value?$("impText").value+"\n":"")+txt.slice(0,20000)}catch(e){toast(L().readFail(f.name))}

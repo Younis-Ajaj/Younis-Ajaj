@@ -7,6 +7,17 @@ const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '
 const results = []; let failures = 0;
 function check(name, ok, info) { results.push((ok ? 'PASS ' : 'FAIL ') + name + (info ? '  — ' + info : '')); if (!ok) failures++; }
 const LONG = Array.from({ length: 14 }, (_, i) => 'اختبار الفرضيات أداة إحصائية تستخدم لتقييم الادعاءات حول المجتمع الإحصائي اعتماداً على بيانات العينة رقم ' + i + '. القيمة الاحتمالية تقيس احتمال الحصول على نتائج متطرفة بافتراض صحة فرضية العدم في التجربة ' + i + '. مستوى الدلالة يحدد عتبة رفض الفرضية الصفرية عند الباحث في الدراسة ' + i + '.').join('\n');
+function sseSearch(text, url) {
+  const ev = (t, d) => 'event: ' + t + '\ndata: ' + JSON.stringify(d) + '\n\n';
+  return ev('message_start', { type: 'message_start', message: { id: 'msg_s', type: 'message', role: 'assistant', model: 'claude-opus-5-5', content: [], stop_reason: null, stop_sequence: null, usage: { input_tokens: 10, output_tokens: 0 } } }) +
+    ev('content_block_start', { type: 'content_block_start', index: 0, content_block: { type: 'web_search_tool_result', tool_use_id: 'srvtoolu_1', content: [{ type: 'web_search_result', url: url, title: 'Official page', encrypted_content: 'x', page_age: null }] } }) +
+    ev('content_block_stop', { type: 'content_block_stop', index: 0 }) +
+    ev('content_block_start', { type: 'content_block_start', index: 1, content_block: { type: 'text', text: '' } }) +
+    ev('content_block_delta', { type: 'content_block_delta', index: 1, delta: { type: 'text_delta', text: text } }) +
+    ev('content_block_stop', { type: 'content_block_stop', index: 1 }) +
+    ev('message_delta', { type: 'message_delta', delta: { stop_reason: 'end_turn', stop_sequence: null }, usage: { output_tokens: 20 } }) +
+    ev('message_stop', { type: 'message_stop' });
+}
 function sse(text) {
   const ev = (t, d) => 'event: ' + t + '\ndata: ' + JSON.stringify(d) + '\n\n';
   return ev('message_start', { type: 'message_start', message: { id: 'msg_test', type: 'message', role: 'assistant', model: 'claude-opus-5-5', content: [], stop_reason: null, stop_sequence: null, usage: { input_tokens: 10, output_tokens: 0 } } }) +
@@ -21,7 +32,7 @@ function sse(text) {
   const URL0 = 'http://localhost:8770/';
   const b = await chromium.launch();
   const ctx = await b.newContext({ viewport: { width: 1280, height: 900 }, timezoneId: 'America/New_York', acceptDownloads: true });
-  let apiCalls = 0; let lastApiHeaders = null; let lastBody = null;
+  let apiCalls = 0; let lastApiHeaders = null; let lastBody = null; let trCalls = 0; let searchCalls = 0; let lastSearch = null;
   await ctx.route('https://api.anthropic.com/**', async route => {
     apiCalls++; lastApiHeaders = await route.request().allHeaders();
     const body = JSON.parse(route.request().postData() || '{}'); lastBody = body;
@@ -31,6 +42,17 @@ function sse(text) {
     else if (prompt.includes('multiple-choice')) text = JSON.stringify({ questions: [{ q: 'ما مستوى الدلالة الشائع؟', options: ['0.05', '0.5', '5', '50'], answer: 0, why: 'الأكثر استخداماً' }, { q: 'ماذا تعني H0؟', options: ['فرضية العدم', 'البديلة', 'العينة', 'المجتمع'], answer: 0, why: 'تعريف' }] });
     else if (prompt.includes('most exam-relevant flashcards')) text = JSON.stringify({ cards: [{ q: 'ما القيمة الاحتمالية؟', a: 'احتمال نتائج متطرفة بافتراض H0' }, { q: 'ما الخطأ من النوع الأول؟', a: 'رفض H0 وهي صحيحة' }] });
     else if (prompt.includes('Feynman')) text = JSON.stringify({ score: 84, good: ['فهمت H0'], gaps: ['الدلالة'], wrong: [], better: 'شرح أفضل', next: 'سؤال' });
+    else if (prompt.includes('Create up to 12 flashcards')) text = JSON.stringify({ cards: [{ q: 'ما ناتج 6×7؟', a: '42' }, { q: 'ما الجذر التربيعي لـ 49؟', a: '7' }] });
+    else if (prompt.includes('Solve the problem')) text = '## الحل\n1. نضرب 6 في 7.\n2. نتحقق: 42 ÷ 7 = 6.\n\n| الخطوة | الناتج |\n|---|---|\n| 6×7 | 42 |\n\n**الجواب النهائي:** 42';
+    else if (String(body.system || '').includes('professional academic translator')) { trCalls++; text = 'ترجمة الجزء ' + trCalls; }
+    else if (prompt.includes('Extract the study plan below')) text = JSON.stringify({ total_hours: 9, groups: [{ name: 'Major requirements', kind: 'compulsory', hours: 9, courses: [{ code: 'CS101', name: 'Programming 1', cr: 3, pre: [] }, { code: 'CS102', name: 'Programming 2', cr: 3, pre: ['CS101'] }, { code: 'CS201', name: 'Data Structures', cr: 3, pre: ['CS102'] }] }] });
+    if (body.tools && body.tools.some(t => t.type === 'web_search_20260209')) {
+      searchCalls++; lastSearch = body;
+      const progs = '```json\n' + JSON.stringify({ programs: [{ en: 'Computer Science', ar: 'علم الحاسوب', faculty: 'King Abdullah II School of IT', url: 'https://ju.edu.jo/cs' }, { en: 'Data Science', ar: '', faculty: 'IT', url: '' }] }) + '\n```';
+      const plan = '```json\n' + JSON.stringify({ total_hours: 12, source: 'https://ju.edu.jo/plan.pdf', groups: [{ name: 'University requirements', kind: 'compulsory', hours: 3, courses: [{ code: 'UNI101', name: 'Arabic Skills', cr: 3, pre: [] }] }, { name: 'Major requirements', kind: 'compulsory', hours: 9, courses: [{ code: 'CS1', name: 'Intro to CS', cr: 3, pre: [] }, { code: 'CS2', name: 'Programming', cr: 3, pre: ['CS1'] }, { code: 'CS3', name: 'Algorithms', cr: 3, pre: ['CS2'] }] }] }) + '\n```';
+      await route.fulfill({ status: 200, headers: { 'content-type': 'text/event-stream', 'access-control-allow-origin': '*' }, body: sseSearch(prompt.includes('list of undergraduate programs') ? 'Found the list.\n' + progs : 'Found the plan.\n' + plan, 'https://ju.edu.jo/programs') });
+      return;
+    }
     await route.fulfill({ status: 200, headers: { 'content-type': 'text/event-stream', 'access-control-allow-origin': '*' }, body: sse(text) });
   });
   const p = await ctx.newPage(); const errs = []; const csp = [];
@@ -154,6 +176,78 @@ function sse(text) {
   await p.click('#mistAIBtn'); await p.waitForTimeout(1500); await D();
   check('mistake analysis written', (await p.textContent('#mistAIOut')).length > 5);
   check('key never stored in backup state', !(await p.evaluate(() => localStorage.getItem('studyplan.v1'))).includes('sk-ant-'));
+
+  await D();
+  // 7b. Lens: real photo -> resized image block -> streamed, rendered answer
+  await p.evaluate(() => location.hash = 'lens'); await p.waitForTimeout(400);
+  check('lens page needs no key prompt once AI is on', !(await p.isVisible('#lensKey')));
+  // a 12-megapixel "phone photo" (4000×3000) made in the page, then uploaded like a real file
+  const big = await p.evaluate(() => { const c = document.createElement('canvas'); c.width = 4000; c.height = 3000; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, 4000, 3000); x.fillStyle = '#123'; x.font = '200px serif'; x.fillText('6 × 7 = ?', 800, 1500); return c.toDataURL('image/png').split(',')[1] });
+  const bigFile = path.join(require('os').tmpdir(), 'younis-12mp.png'); fs.writeFileSync(bigFile, Buffer.from(big, 'base64'));
+  await p.setInputFiles('#imgFile', bigFile); await p.waitForTimeout(1500);
+  const dims = await p.textContent('#imgThumbs small');
+  const [tw, th] = dims.split('×').map(Number);
+  check('12 MP photo resized to Claude\'s vision budget (≤2576px, ≤3.75MP, ratio kept)', Math.max(tw, th) <= 2576 && tw * th <= 3.75e6 && tw * th > 3.6e6 && Math.abs(tw / th - 4 / 3) < 0.01, dims);
+  await p.click('#lensGo'); await p.waitForTimeout(1500);
+  const img = (lastBody.messages[0].content || []).find(c => c.type === 'image');
+  check('request carries a base64 JPEG image block', !!img && img.source.media_type === 'image/jpeg' && img.source.data.length > 10000);
+  check('lens sends a system prompt and high effort for solving', String(lastBody.system).includes('Younis') && lastBody.output_config.effort === 'high');
+  check('answer rendered as safe markdown with a table', await p.isVisible('#lensOut table') && (await p.textContent('#lensOut')).includes('42'));
+  await p.click('#imgThumbs [data-rot="0"]'); await p.waitForTimeout(600);
+  check('rotate swaps width and height', (await p.textContent('#imgThumbs small')) === th + '×' + tw);
+  await p.click('[data-lm="cards"]'); await p.click('#lensGo'); await p.waitForTimeout(1500);
+  const cardsBefore = await p.evaluate(() => JSON.parse(localStorage.getItem('studyplan.v1')).cards.length);
+  await p.click('#lensCardAdd'); await p.waitForTimeout(300);
+  const cardsAfter = await p.evaluate(() => JSON.parse(localStorage.getItem('studyplan.v1')).cards.length);
+  check('photo turned into review flashcards', cardsAfter === cardsBefore + 2, cardsBefore + ' -> ' + cardsAfter);
+  // translation: long text is split into parts and every part is translated in order
+  await p.click('#lensTabT'); await p.waitForTimeout(200);
+  const para = 'Hypothesis testing is a statistical method used to decide whether the data support a claim about a population. ';
+  const longText = Array.from({ length: 3 }, () => para.repeat(40)).join('\n\n');
+  await p.fill('#trText', longText); await p.selectOption('#trTo', 'ar');
+  const parts = await p.textContent('#trInfo');
+  trCalls = 0; await p.click('#trGo'); await p.waitForTimeout(3000);
+  const trOut = await p.textContent('#trOut');
+  check('long text translated in 3 parts, in order', trCalls === 3 && trOut.indexOf('ترجمة الجزء 1') < trOut.indexOf('ترجمة الجزء 3'), parts + ' / calls=' + trCalls);
+  check('translation output is right-to-left for Arabic', (await p.getAttribute('#trOut', 'dir')) === 'rtl');
+  const [docx] = await Promise.all([p.waitForEvent('download'), p.click('#trDocx')]);
+  const dpath = path.join(require('os').tmpdir(), 'younis-tr-test.docx'); await docx.saveAs(dpath);
+  const zbuf = fs.readFileSync(dpath);
+  check('translation downloads as a real Word file', docx.suggestedFilename().endsWith('.docx') && zbuf.slice(0, 2).toString() === 'PK' && zbuf.includes(Buffer.from('word/document.xml')));
+
+  await D();
+  // 7c. My university: verified catalog (AAU) -> major -> tracker
+  await p.evaluate(() => location.hash = 'uni'); await p.waitForTimeout(800);
+  await p.selectOption('#uniCountry', 'JO'); await p.waitForTimeout(500);
+  await p.fill('#uniSearch', 'ahliyya'); await p.waitForTimeout(300);
+  check('university search finds AAU and marks it verified', await p.isVisible('#uniList .vtag'));
+  await p.click('#uniList button'); await p.waitForTimeout(800);
+  const nProg = (await p.$$('[data-u="prog"]')).length;
+  check('verified catalog lists only this university\'s majors', nProg >= 40, 'programs=' + nProg);
+  await p.fill('#majSearch', 'Data Science'); await p.waitForTimeout(700);
+  await p.click('[data-u="prog"]'); await p.waitForTimeout(800);
+  const crs = (await p.$$('.crs li')).length;
+  check('major shows its own study plan courses', crs >= 55, 'courses=' + crs);
+  const pct0 = await p.textContent('.bigpct');
+  await p.click('[data-u="st"][data-c="01006145"][data-v="d"]'); await p.waitForTimeout(400);
+  check('passing a 3-hour course adds 3 hours', (await p.textContent('.grad')).includes('3 من 132'), (await p.textContent('.grad p')).slice(0, 60));
+  check('its dependent course becomes available next semester', (await p.textContent('.nextlist')).includes('البرمجة') || (await p.textContent('.nextlist')).includes('Programming'));
+  await p.click('[data-u="st"][data-c="01006146"][data-v="n"]'); await p.waitForTimeout(300);
+  await p.click('[data-u="toplan"]'); await p.waitForTimeout(300);
+  const subs = await p.evaluate(() => JSON.parse(localStorage.getItem('studyplan.v1')).subjects.map(s => s.name));
+  check('courses I take now go into my study plan', subs.some(n => /برمجة|Programming/.test(n)), subs.join(','));
+  // AI search path for a university without a verified plan, limited to its own domain
+  await p.click('[data-u="chuni"]'); await p.waitForTimeout(600);
+  await p.fill('#uniSearch', 'University of Jordan'); await p.waitForTimeout(300);
+  check('search ranks the exact name first', (await p.textContent('#uniList button')).includes('University of Jordan') && !(await p.textContent('#uniList button')).includes('Science'), await p.textContent('#uniList button'));
+  await p.click('#uniList button'); await p.waitForTimeout(600);
+  await p.click('[data-u="aiprogs"]'); await p.waitForTimeout(1500);
+  check('AI search is restricted to the university\'s domain', !!lastSearch && lastSearch.tools[0].allowed_domains[0] === 'ju.edu.jo', lastSearch ? JSON.stringify(lastSearch.tools[0]) : 'none');
+  check('AI-found majors listed with sources', (await p.$$('[data-u="aiprog"]')).length === 2 && await p.isVisible('.srcline a'));
+  await p.click('[data-u="aiprog"]'); await p.waitForTimeout(1500);
+  check('AI-found plan shows courses, tagged for checking', (await p.$$('.crs li')).length === 4 && await p.isVisible('.vtag.ai'));
+  const srcHref = await p.getAttribute('.srcline a', 'href');
+  check('source links are https with noopener', /^https:/.test(srcHref) && (await p.getAttribute('.srcline a', 'rel')).includes('noopener'));
   await D();
   // 8. grades
   await p.evaluate(() => location.hash = 'grades'); await p.waitForTimeout(300);
@@ -169,6 +263,10 @@ function sse(text) {
   const file = path.join(require('os').tmpdir(), 'younis-backup-test.json'); await dl.saveAs(file);
   const exported = JSON.parse(fs.readFileSync(file, 'utf8'));
   check('backup exports state', Array.isArray(exported.subjects) && exported.subjects.length >= 3 && !JSON.stringify(exported).includes('sk-ant-'));
+  check('file inputs have unique ids', await p.evaluate(() => document.querySelectorAll('#impFile').length === 1 && !!document.getElementById('ttFile')));
+  await p.setInputFiles('#impFile', file); await p.waitForTimeout(500);
+  const okMsg = await p.evaluate(() => T.ar.impOk);
+  check('backup restore works', (await p.textContent('#toast')) === okMsg, await p.textContent('#toast'));
   await D();
   const [cardDl] = await Promise.all([p.waitForEvent('download'), p.click('#shareBtn')]);
   check('progress card downloads as a PNG', cardDl.suggestedFilename() === 'younis-progress.png' && await p.isVisible('#sharePrev img'));
@@ -206,7 +304,7 @@ function sse(text) {
   await m.goto(URL0); await m.waitForTimeout(800);
   for (const lang of ['ar', 'en']) {
     await m.evaluate(l => { const s = JSON.parse(localStorage.getItem('studyplan.v1') || '{}'); s.lang = l; s.onboarded = true; localStorage.setItem('studyplan.v1', JSON.stringify(s)) }, lang);
-    for (const v of ['welcome', 'today', 'chat', 'plan', 'focus', 'tutor', 'review', 'stats', 'grades']) { await m.goto(URL0 + '#' + v); await m.waitForTimeout(350); const w = await m.evaluate(() => document.documentElement.scrollWidth); if (w > 375) over.push(lang + ':' + v + '=' + w + ' ' + await m.evaluate(() => [...document.querySelectorAll('body *')].filter(e => { const b = e.getBoundingClientRect(); return b.width && (b.right > 375.5 || b.left < -0.5) }).slice(0, 4).map(e => e.tagName + '#' + e.id + '.' + String(e.className).slice(0, 30) + '[' + Math.round(e.getBoundingClientRect().left) + ',' + Math.round(e.getBoundingClientRect().right) + ']').join('|'))) }
+    for (const v of ['welcome', 'today', 'chat', 'lens', 'plan', 'focus', 'tutor', 'review', 'uni', 'stats', 'grades']) { await m.goto(URL0 + '#' + v); await m.waitForTimeout(350); const w = await m.evaluate(() => document.documentElement.scrollWidth); if (w > 375) over.push(lang + ':' + v + '=' + w + ' ' + await m.evaluate(() => [...document.querySelectorAll('body *')].filter(e => { const b = e.getBoundingClientRect(); return b.width && (b.right > 375.5 || b.left < -0.5) }).slice(0, 4).map(e => e.tagName + '#' + e.id + '.' + String(e.className).slice(0, 30) + '[' + Math.round(e.getBoundingClientRect().left) + ',' + Math.round(e.getBoundingClientRect().right) + ']').join('|'))) }
   }
   check('no horizontal overflow at 375px', over.length === 0, over.join(', '));
 
@@ -214,7 +312,7 @@ function sse(text) {
   // 14. accessibility (axe) on landing and app views
   const actx = await b.newContext({ bypassCSP: true, viewport: { width: 1280, height: 900 } }); const a = await actx.newPage();
   await a.goto(URL0); await a.waitForTimeout(800); const axeOut = [];
-  for (const v of ['welcome', 'today', 'chat', 'plan', 'focus', 'tutor', 'review', 'stats', 'grades']) {
+  for (const v of ['welcome', 'today', 'chat', 'lens', 'plan', 'focus', 'tutor', 'review', 'uni', 'stats', 'grades']) {
     if (v === 'today') await a.evaluate(() => { const s = JSON.parse(localStorage.getItem('studyplan.v1') || '{}'); s.onboarded = true; localStorage.setItem('studyplan.v1', JSON.stringify(s)) });
     await a.goto(URL0 + '#' + v); await a.waitForTimeout(500);
     const r = await a.evaluate(AXE + ';axe.run(document,{resultTypes:["violations"]}).then(r=>r.violations.filter(v=>v.impact==="serious"||v.impact==="critical").map(v=>v.id+"("+v.nodes.length+")"))');

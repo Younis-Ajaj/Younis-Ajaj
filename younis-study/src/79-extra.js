@@ -28,7 +28,7 @@ function renderImport(){
   }).join("")+'</ul><button class="btn primary sm" type="button" id="impAdd" style="margin-top:10px">'+esc(l.impAdd)+'</button>';
 }
 $("impToggle").onclick=function(){var p=$("impPanel"); p.hidden=!p.hidden; if(!p.hidden) $("impText").focus()};
-$("impFile").addEventListener("change",async function(){
+$("ttFile").addEventListener("change",async function(){
   var f=this.files&&this.files[0]; this.value=""; if(!f) return;
   if(f.size>25*1024*1024){toast(L().fileBig(f.name)); return}
   try{var txt=await readFile(f); $("impText").value=($("impText").value?$("impText").value+"\n":"")+txt.slice(0,20000)}catch(e){toast(L().readFail(f.name))}

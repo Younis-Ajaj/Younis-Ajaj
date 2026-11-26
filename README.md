@@ -40,10 +40,15 @@ A free, Arabic-first exam-preparation platform for school and university student
 - **Personal study plan:** a scheduling algorithm spreads study hours by difficulty and exam date, reschedules missed work, and exports to Google Calendar.
 - **Ask Younis:** a chat assistant built on the Claude API, with tutoring instructions for accurate, step-by-step answers. Without a key it still answers from the student's own plan and files.
 - **AI tutor:** explanations, mind maps, timed quizzes, auto flashcards and Feynman-style grading, plus a weekly AI report and mistake analysis.
+- **Younis Lens:** snap a problem, page or diagram and get a step-by-step solution, an explanation, an exact transcription or flashcards, using Claude vision with images resized to the model's exact resolution budget.
+- **File translation:** PDF, Word, PowerPoint, photos and scanned PDFs translated part by part into 18 languages, with a Word download built from scratch (Office Open XML).
+- **My university + graduation tracker:** 10,000+ universities from an open dataset, 53 official degree plans scraped from Al-Ahliyya Amman University's website (Python, BeautifulSoup), AI web search limited to a university's own domain for the rest, and a prerequisite-aware planner that suggests next semester's courses.
 - **Smart insights:** a readiness index per course and recommendations drawn from the student's real activity.
-- **Engineering:** no backend, and data stays in the browser. Strict Content Security Policy, self-hosted libraries and fonts, and offline support as an installable PWA. 59 automated end-to-end checks with Playwright and axe. Lighthouse desktop: 100 for accessibility, best practices and SEO.
+- **Engineering:** no backend, and data stays in the browser. Strict Content Security Policy, self-hosted libraries and fonts, and offline support as an installable PWA. 82 automated end-to-end checks with Playwright and axe, with a mocked Claude API. Lighthouse desktop: 100 in all four categories.
 
-**Stack:** JavaScript · HTML/CSS · Anthropic TypeScript SDK (Claude) · pdf.js · Playwright · GitHub Pages
+**Stack:** JavaScript · HTML/CSS · Anthropic TypeScript SDK (Claude vision, web search) · Python (BeautifulSoup) · pdf.js · JSZip · Playwright · GitHub Pages
+
+📘 [How each feature was built (practical guide, Arabic)](younis-study/GUIDE.md)
 
 ---
 
@@ -52,7 +57,7 @@ A free, Arabic-first exam-preparation platform for school and university student
 | Area | Tools |
 |---|---|
 | Languages | Python, Java, SQL, JavaScript, HTML/CSS |
-| AI & data | LLM integration (Claude API), prompt design, data analysis (learning), machine learning (learning) |
+| AI & data | LLM and vision integration (Claude API), prompt design, tool use (web search), web scraping and data pipelines, data analysis (learning), machine learning (learning) |
 | Engineering | Git & GitHub, GitHub Pages, automated testing (Playwright), accessibility (axe), web security (CSP) |
 
 ## Currently learning

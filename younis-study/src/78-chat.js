@@ -5,13 +5,22 @@ function mdInline(s){
   return s.replace(/`([^`]+)`/g,"<code>$1</code>").replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>");
 }
 function renderMd(text){
-  var lines=esc(text).split("\n"), out=[], list=null, code=null;
-  function closeList(){if(list){out.push("</"+list+">"); list=null}}
+  var lines=esc(text).split("\n"), out=[], list=null, code=null, table=null;
+  function closeTable(){if(table){out.push('<div class="tbl"><table>'+table.join("")+'</table></div>'); table=null}}
+  function closeList(){closeTable(); if(list){out.push("</"+list+">"); list=null}}
+  function cells(ln){return ln.trim().replace(/^\||\|$/g,"").split("|").map(function(c){return mdInline(c.trim())})}
   lines.forEach(function(raw){
     var ln=raw.replace(/\s+$/,"");
     if(/^```/.test(ln)){if(code!==null){out.push("<pre><code>"+code.join("\n")+"</code></pre>"); code=null} else {closeList(); code=[]} return}
     if(code!==null){code.push(raw); return}
     var m;
+    if(/^\s*\|.*\|\s*$/.test(ln)){
+      if(/^\s*\|?[\s:|-]+\|?\s*$/.test(ln)&&/-/.test(ln)) return;
+      if(!table){closeList(); table=[]; table.push("<tr>"+cells(ln).map(function(c){return "<th>"+c+"</th>"}).join("")+"</tr>"); return}
+      table.push("<tr>"+cells(ln).map(function(c){return "<td>"+c+"</td>"}).join("")+"</tr>"); return;
+    }
+    closeTable();
+    if(/^\s*(-{3,}|\*{3,})\s*$/.test(ln)){closeList(); out.push("<hr>"); return}
     if((m=ln.match(/^#{1,4}\s+(.*)$/))){closeList(); out.push("<h4>"+mdInline(m[1])+"</h4>"); return}
     if((m=ln.match(/^\s*[-*•]\s+(.*)$/))){if(list!=="ul"){closeList(); out.push("<ul>"); list="ul"} out.push("<li>"+mdInline(m[1])+"</li>"); return}
     if((m=ln.match(/^\s*\d+[.)]\s+(.*)$/))){if(list!=="ol"){closeList(); out.push("<ol>"); list="ol"} out.push("<li>"+mdInline(m[1])+"</li>"); return}
@@ -27,7 +36,7 @@ function chatSystem(useFiles){
   var courses=(current?current.subs:[]).map(function(s){return s.name+" (exam in "+diffDays(t,s.d)+" days, readiness "+readiness(find(s.id)||s)+"%)"}).join("; ");
   var notes=useFiles?$("tNotes").value.trim().slice(0,30000):"";
   return ["You are Younis (يونس), an expert and warm study tutor inside an exam-preparation platform for Arab students.",
-    "Student: "+(p.name||"(no name given)")+"; level: "+(uni?"university":"school")+(p.major?"; major: "+p.major:"")+(courses?"; courses: "+courses:"")+"; today: "+iso(t)+".",
+    "Student: "+(p.name||"(no name given)")+"; level: "+(uni?"university":"school")+(state.uni&&state.uni.uname?"; university: "+state.uni.uname:"")+(p.major?"; major: "+p.major:"")+(courses?"; courses: "+courses:"")+"; today: "+iso(t)+".",
     "How you answer:",
     "1. Accuracy first. Rely on standard textbook knowledge and be exact with definitions, formulas, numbers and units. If you are not sure, say so plainly and say how to check. Never invent sources, quotes or statistics.",
     "2. Structure every substantive answer: open with a direct answer in one or two sentences, then short headed sections, numbered steps for procedures, a worked example where it helps, the common exam mistakes when relevant, and close with one short question that checks understanding.",

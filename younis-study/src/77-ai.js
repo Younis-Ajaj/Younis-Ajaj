@@ -20,15 +20,19 @@ function makeSample(key){
     else if(e instanceof A.APIConnectionError) c="network";
     return {code:c,message:(e&&e.message)||"",text:text||""};
   }
-  function run(input,opts){
-    opts=opts||{}; var text="";
-    var effort=opts.effort||(opts.modelTier==="complex"?"high":"medium");
-    var stream=client.beta.messages.stream({
+  function params(input,opts,extra){
+    var p={
       model:"claude-opus-5-5", max_tokens:opts.maxTokens||64000,
-      output_config:{effort:effort},
+      output_config:{effort:opts.effort||(opts.modelTier==="complex"?"high":"medium")},
       betas:["server-side-fallback-2026-07-01"], fallbacks:"default",
       messages:toMsgs(input)
-    },{signal:opts.signal});
+    };
+    if(opts.system) p.system=opts.system;
+    return Object.assign(p,extra||{});
+  }
+  function run(input,opts){
+    opts=opts||{}; var text="";
+    var stream=client.beta.messages.stream(params(input,opts),{signal:opts.signal});
     stream.on("error",function(){});
     stream.on("text",function(delta){text+=delta; if(opts.onText) opts.onText({text:text,delta:delta})});
     return stream.finalMessage().then(function(msg){
@@ -38,6 +42,35 @@ function makeSample(key){
     },function(e){throw (e&&e.code&&!(e instanceof Error))?e:mapErr(e,text)});
   }
   var fn=function(input,opts){return run(input,opts)};
+  /* Web search on Anthropic's servers, limited to the given domains. Claude reads the pages,
+     answers, and we keep the URLs it used so the student can check them. */
+  fn.search=function(input,opts){
+    opts=opts||{}; var msgs=params(input,opts).messages.slice(), text="", rounds=0, found=[], cited=[], fail="";
+    var tool={type:"web_search_20260209",name:"web_search",max_uses:opts.maxUses||8};
+    if(opts.domains&&opts.domains.length) tool.allowed_domains=opts.domains;
+    function step(){
+      var stream=client.beta.messages.stream(params(msgs,opts,{max_tokens:opts.maxTokens||32000,tools:[tool]}),{signal:opts.signal});
+      stream.on("error",function(){});
+      stream.on("text",function(delta){text+=delta; if(opts.onText) opts.onText({text:text,delta:delta})});
+      return stream.finalMessage().then(function(msg){
+        msg.content.forEach(function(b){
+          if(b.type==="web_search_tool_result"){
+            if(Array.isArray(b.content)) b.content.forEach(function(r){if(r&&r.url) found.push({url:r.url,title:r.title||""})});
+            else if(b.content&&b.content.error_code) fail=b.content.error_code;
+          }
+          if(b.type==="text"&&Array.isArray(b.citations)) b.citations.forEach(function(c){if(c&&c.url) cited.push({url:c.url,title:c.title||""})});
+        });
+        if(msg.stop_reason==="refusal") throw {code:"refused",text:text};
+        if(msg.stop_reason==="pause_turn"&&rounds++<4){msgs.push({role:"assistant",content:msg.content}); return step()}
+        var seen={}, sources=(cited.length?cited:found).filter(function(x){if(seen[x.url]) return false; seen[x.url]=1; return /^https:\/\//.test(x.url)});
+        return {text:text,sources:sources.slice(0,12),searchError:fail};
+      },function(e){
+        if(e&&e.status===400&&/web.?search/i.test(e.message||"")) throw {code:"web_off",text:text};
+        throw (e&&e.code&&!(e instanceof Error))?e:mapErr(e,text);
+      });
+    }
+    return step();
+  };
   fn.json=function(input,opts){
     return run(input,opts).then(function(r){
       var t=r.text, a=t.indexOf("{"), b=t.lastIndexOf("}");
@@ -51,6 +84,7 @@ function enableAI(fn){
   sample=fn; sampleChecked=true;
   $("coach").hidden=false; $("tutorNote").hidden=true; $("tutor").classList.remove("basic");
   document.body.classList.remove("noai");
+  if(route==="lens"||route==="uni") onRoute[route]();   // the key can finish loading after the page drew
 }
 function activateKey(k,remember,silent){
   var l=L();

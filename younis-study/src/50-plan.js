@@ -239,7 +239,8 @@ $("copyBtn").onclick=function(){
 var downloads=null;
 function saveFile(name,data){
   if(!downloads&&IS_WEB){
-    var a=document.createElement("a"), url=URL.createObjectURL(new Blob([data],{type:/\.json$/.test(name)?"application/json":/\.png$/.test(name)?"image/png":"text/csv;charset=utf-8"}));
+    var type=/\.json$/.test(name)?"application/json":/\.png$/.test(name)?"image/png":/\.txt$/.test(name)?"text/plain;charset=utf-8":/\.docx$/.test(name)?"application/vnd.openxmlformats-officedocument.wordprocessingml.document":"text/csv;charset=utf-8";
+    var a=document.createElement("a"), url=URL.createObjectURL(data instanceof Blob?data:new Blob([data],{type:type}));
     a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(url)},4000);
     return Promise.resolve({status:"saved"});
   }

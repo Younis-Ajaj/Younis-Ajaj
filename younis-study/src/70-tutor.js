@@ -3,7 +3,7 @@
 var sample=null, sampleChecked=false, ctl=null, tts=null, dict=null;
 function langRule(){return state.lang==="en"?"Write in English.":"اكتب بالعربية مع إبقاء المصطلحات العلمية بالإنجليزية بين قوسين."}
 var PLAIN="\nPlain text only: no markdown symbols such as asterisks or heading marks.";
-function errCopy(e){var l=L(), c=e&&e.code; return c==="rate_limited"?l.eRate:c==="invalid_json"?l.eJson:c==="auth"?l.aiBadKey:c==="refused"?l.aiRefused:c==="network"?l.aiNet:l.eGen}
+function errCopy(e){var l=L(), c=e&&e.code; return c==="rate_limited"?l.eRate:c==="invalid_json"?l.eJson:c==="auth"?l.aiBadKey:c==="refused"?l.aiRefused:c==="network"?l.aiNet:c==="web_off"?l.uniWebOff:l.eGen}
 $("coachStop").onclick=function(){if(ctl) ctl.abort()};
 $("coachBtn").onclick=function(){
   if(!sample||!current) return;

@@ -20,6 +20,13 @@
   <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></symbol>
   <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4M12 13v5M9.5 15.5h5"/></symbol>
   <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></symbol>
+  <symbol id="i-cam" viewBox="0 0 24 24"><path d="M3 8h4l2-3h6l2 3h4v12H3z"/><circle cx="12" cy="13.5" r="3.6"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></symbol>
+  <symbol id="i-uni" viewBox="0 0 24 24"><path d="M3 9l9-5 9 5"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20.5h18"/></symbol>
+  <symbol id="i-tr" viewBox="0 0 24 24"><path d="M3 5h10M8 3v2M5 5c0 4 3 7 7 8M11 5c-1 4-4 7-8 8"/><path d="M12 21l4.5-10 4.5 10M13.6 17.5h5.8"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h12l-2.5 4L17 12H5"/></symbol>
+  <symbol id="i-rotate" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
   <symbol id="i-max" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
 </svg>
 <canvas id="aurora" aria-hidden="true"></canvas>
@@ -99,6 +106,67 @@
         </div>
       </section>
 
+      <!-- ================= LENS: camera, image analysis and translation ================= -->
+      <section class="view" id="v-lens">
+        <header class="vhead"><h1 class="display"><span data-t="lensH"></span></h1><p data-t="lensLede"></p></header>
+        <div class="seg lens-tabs" role="tablist" data-ta="lensH">
+          <button type="button" role="tab" id="lensTabA" aria-controls="lensA" aria-selected="true" data-t="lensTabA"></button>
+          <button type="button" role="tab" id="lensTabT" aria-controls="lensT" aria-selected="false" data-t="lensTabT"></button>
+        </div>
+        <div class="banner" id="lensKey" hidden><p data-t="lensNeedKey"></p><a class="btn sm primary" href="#tutor" data-t="lensKeyBtn"></a></div>
+        <div id="lensA" role="tabpanel" aria-labelledby="lensTabA">
+          <div class="sheet tape">
+            <div class="lens-src">
+              <button class="btn primary" type="button" id="camOpen"><svg><use href="#i-cam"/></svg><span data-t="camOpen"></span></button>
+              <label class="btn ghost"><svg><use href="#i-image"/></svg><span data-t="imgPick"></span><input type="file" id="imgFile" accept="image/*" multiple hidden></label>
+              <span class="soft small" data-t="imgPaste"></span>
+            </div>
+            <div class="cam" id="camBox" hidden>
+              <video id="camVideo" playsinline autoplay muted></video>
+              <div class="cam-bar">
+                <button class="btn sm" type="button" id="camFlip" data-t="camFlip"></button>
+                <button class="shutter" type="button" id="camShot" data-ta="camShot"></button>
+                <button class="btn sm" type="button" id="camClose" data-t="camClose"></button>
+              </div>
+            </div>
+            <p class="error" id="camErr" role="alert" hidden></p>
+            <div class="thumbs" id="imgThumbs"></div>
+            <div style="margin-top:14px"><span class="lab" data-t="lensModeQ"></span><div class="chips" id="lensModes" role="group" data-ta="lensModeQ"></div></div>
+            <div style="margin-top:12px"><label for="lensAsk" data-t="lensAskL"></label><textarea id="lensAsk" rows="2" maxlength="2000" data-tp="lensAskP"></textarea></div>
+            <div class="actions" style="margin-top:12px"><button class="btn primary" type="button" id="lensGo" data-t="lensGo"></button><button class="btn ghost" type="button" id="lensStop" hidden data-t="stop"></button></div>
+            <p class="soft small" style="margin:10px 0 0" data-t="lensPrivacy"></p>
+          </div>
+          <div class="sheet" id="lensPanel" hidden style="margin-top:16px">
+            <div class="row c" style="justify-content:space-between"><h3 data-t="lensResult"></h3><button class="btn sm ghost" type="button" id="lensCopy"><svg><use href="#i-copy"/></svg><span data-t="copy"></span></button></div>
+            <div class="md" id="lensOut"></div>
+            <div id="lensExtra"></div>
+            <form class="row c" id="lensFollow" style="margin-top:14px" hidden><div class="field"><label for="lensQ" data-t="lensFollowL"></label><input type="text" id="lensQ" maxlength="1000" autocomplete="off"></div><button class="btn sm primary" type="submit" data-t="ask"></button></form>
+          </div>
+        </div>
+        <div id="lensT" role="tabpanel" aria-labelledby="lensTabT" hidden>
+          <div class="sheet tape mint">
+            <div class="row">
+              <div class="field"><label for="trFile" data-t="trFileL"></label><input type="file" id="trFile" accept=".pdf,.docx,.pptx,.xlsx,.txt,.md,.csv,image/*"></div>
+              <div class="field"><label for="trTo" data-t="trTo"></label><select id="trTo"></select></div>
+            </div>
+            <div style="margin-top:10px"><label for="trText" data-t="trTextL"></label><textarea id="trText" rows="5" maxlength="200000" data-tp="trTextP"></textarea></div>
+            <div class="row c opts">
+              <label class="row c chk"><input type="checkbox" id="trTerms" checked><span data-t="trTerms"></span></label>
+              <label class="row c chk"><input type="checkbox" id="trSimple"><span data-t="trSimple"></span></label>
+            </div>
+            <p class="soft small" id="trInfo" aria-live="polite" style="margin:8px 0 0"></p>
+            <div class="actions" style="margin-top:12px"><button class="btn primary" type="button" id="trGo" data-t="trGo"></button><button class="btn ghost" type="button" id="trStop" hidden data-t="stop"></button></div>
+            <p class="soft small" style="margin:10px 0 0" data-t="trPrivacy"></p>
+          </div>
+          <div class="sheet" id="trPanel" hidden style="margin-top:16px">
+            <div class="row c" style="justify-content:space-between;gap:8px"><h3 data-t="trResult"></h3><div class="actions"><button class="btn sm ghost" type="button" id="trCopy"><svg><use href="#i-copy"/></svg><span data-t="copy"></span></button><button class="btn sm ghost" type="button" id="trDocx"><svg><use href="#i-down"/></svg><span data-t="trDocx"></span></button><button class="btn sm ghost" type="button" id="trTxt"><svg><use href="#i-down"/></svg><span data-t="trTxt"></span></button></div></div>
+            <div class="progress" id="trProg" hidden><i></i></div>
+            <p class="soft small" id="trStatus" aria-live="polite" style="margin:4px 0 0"></p>
+            <div class="md" id="trOut"></div>
+          </div>
+        </div>
+      </section>
+
       <!-- ================= PLAN ================= -->
       <section class="view" id="v-plan">
         <header class="vhead"><h1 class="display"><span data-t="h1"></span></h1><p data-t="lede"></p></header>
@@ -107,7 +175,7 @@
           <div class="row c" style="justify-content:space-between"><div><h3 data-t="impH"></h3><p class="soft small" style="margin:2px 0 0" data-t="impLede"></p></div><button class="btn sm" id="impToggle" type="button" data-t="impBtn"></button></div>
           <div id="impPanel" hidden style="margin-top:12px">
             <label for="impText" data-t="impL"></label><textarea id="impText" data-tp="impP"></textarea>
-            <div class="row c" style="margin-top:8px"><label class="btn sm ghost" style="margin:0;color:var(--ink)"><svg><use href="#i-up"/></svg><span data-t="impFileL"></span><input type="file" id="impFile" accept=".pdf,.docx,.xlsx,.txt,.csv" hidden></label><button class="btn sm primary" id="impGo" type="button" data-t="impGo"></button></div>
+            <div class="row c" style="margin-top:8px"><label class="btn sm ghost" style="margin:0;color:var(--ink)"><svg><use href="#i-up"/></svg><span data-t="impFileL"></span><input type="file" id="ttFile" accept=".pdf,.docx,.xlsx,.txt,.csv" hidden></label><button class="btn sm primary" id="impGo" type="button" data-t="impGo"></button></div>
             <div id="impOut" style="margin-top:10px"></div>
           </div>
         </div>
@@ -263,6 +331,12 @@
         </div>
         <h2 class="sec"><span data-t="mistH"></span><span class="chip" id="mistCount"></span></h2>
         <div class="sheet"><p class="soft small" style="margin:0" data-t="mistLede"></p><div class="actions ai-only" style="margin-top:10px"><button class="btn sm hl" id="mistAIBtn" type="button"><svg><use href="#i-tutor"/></svg><span data-t="mistAI"></span></button></div><div class="out" id="mistAIOut" aria-live="polite"></div><ul class="mlist" id="mlist"></ul></div>
+      </section>
+
+      <!-- ================= MY UNIVERSITY: catalog and graduation tracker ================= -->
+      <section class="view" id="v-uni">
+        <header class="vhead"><h1 class="display"><span data-t="uniH"></span></h1><p data-t="uniLede"></p></header>
+        <div id="uniBody"></div>
       </section>
 
       <!-- ================= STATS ================= -->

@@ -4,7 +4,9 @@
 
 > مساعدك الدراسي الذكي، باسم صانعه يونس أبو عجاج.
 
-**منصة مذاكرة عربية مجانية لطلاب المدرسة والتوجيهي والجامعة:** خطة يومية تُبنى على موادك أنت، ومساعد محادثة «اسأل يونس»، وغرفة تركيز، ومعلّم ذكي، ومراجعة متباعدة، ودفتر أخطاء، وأوقات الصلاة والتاريخ الهجري.
+**منصة مذاكرة عربية مجانية لطلاب المدرسة والتوجيهي والجامعة:** خطة يومية تُبنى على موادك أنت، ومساعد محادثة «اسأل يونس»، و«عدسة يونس» التي تحلّ وتشرح ما تصوّره، وترجمة دقيقة لملفاتك، و«جامعتي» التي تعرض مواد تخصصك وطريقك إلى التخرج، وغرفة تركيز، ومعلّم ذكي، ومراجعة متباعدة، ودفتر أخطاء، وأوقات الصلاة والتاريخ الهجري.
+
+> 📘 **[الدليل العملي: كيف بُنيت كل ميزة، ولماذا](GUIDE.md)**
 
 - **الموقع:** https://younis-ajaj.github.io/Younis-Ajaj/
 - **نسخة Claude** (المعلّم الذكي يعمل فيها بحساب Claude بلا مفتاح): https://claude.ai/artifact/TXJqkw8BpsTdVT36RQevMt
@@ -23,6 +25,10 @@
 | **المحلل الذكي** | توصيات من أرقامك الحقيقية: أخطر مادة الآن، وتيرتك الأسبوعية، أفضل وقت لتركيزك، وأين تتكرر أخطاؤك. |
 | **غرفة التركيز** | بومودورو (25/5، 50/10، 90/15) بأصوات مطر وأمواج، وكل دقيقة تُسجَّل لمادتها، وتتوقف تلقائياً عند وقت الصلاة إن فعّلته. |
 | **المعلّم** | ملخص واختبار من ملفات PDF وWord وPowerPoint وExcel داخل متصفحك. ومع المعلّم الذكي: شرح، وخريطة ذهنية، واختبار بتوقيت، وبطاقات تلقائية، وطريقة فاينمان. |
+| **عدسة يونس** | صوّر مسألة أو صفحة أو مخططاً بالكاميرا أو ارفع صورتها (حتى 5 صور)، فيحلّها خطوة بخطوة، أو يشرحها، أو يستخرج نصها حرفياً، أو يلخّصها، أو يصحّح حلّك، أو يحوّلها إلى بطاقات مراجعة. |
+| **ترجمة الملفات** | PDF وWord وPowerPoint وExcel والنصوص والصور، وحتى الملفات المصوّرة: تُترجم كاملة إلى 18 لغة مع الحفاظ على العناوين والجداول، وتنزّلها ملف Word. |
+| **جامعتي** | اختر بلدك وجامعتك من أكثر من 10 آلاف جامعة، فتظهر تخصصاتها فقط، ثم مواد خطتك فقط مع ساعاتها ومتطلباتها السابقة. خطط جامعة عمّان الأهلية (53 تخصصاً) موثّقة من موقعها الرسمي، والجامعات الأخرى عبر بحث ذكي في موقعها الرسمي أو بإدخال خطتك. |
+| **طريقك إلى التخرج** | علّم ما نجحت فيه وما تدرسه الآن: نسبة إنجازك، وساعاتك المتبقية، وعدد الفصول، والمواد المتاحة لك في الفصل القادم مع اقتراح جدول، وإضافة مواد الفصل إلى خطتك بضغطة. |
 | **المراجعة** | بطاقات بالتكرار المتباعد، ودفتر أخطاء يجمع كل سؤال أخطأت فيه مع سببه، وتحليل ذكي للأخطاء. |
 | **إنجازي** | مستويات ونقاط وأوسمة، وخريطة نشاط 16 أسبوعاً، وتقرير أسبوعي ذكي، ونسخة احتياطية. |
 | **شارك إنجازك** | صورة أنيقة بإنجازك الأسبوعي (دقائق التركيز، الجلسات، الجاهزية) جاهزة لواتساب وإنستغرام. |
@@ -32,6 +38,10 @@
 <p>
 <img src="assets/today.png" alt="لوحة اليوم" width="49%">
 <img src="assets/chat.png" alt="اسأل يونس" width="49%">
+</p>
+<p>
+<img src="assets/lens.png" alt="عدسة يونس" width="49%">
+<img src="assets/uni.png" alt="جامعتي وطريقك إلى التخرج" width="49%">
 </p>
 <p>
 <img src="assets/focus.png" alt="غرفة التركيز" width="49%">
@@ -73,17 +83,24 @@ docs/                  الموقع المنشور (GitHub Pages من مجلد /
 younis-study/
   src/                 الكود المصدري مقسّماً حسب الميزة
     00-head.html … 25-landing.html   الواجهة والصفحة الرئيسية
-    30-i18n.js, 35-i18n2.js          النصوص العربية والإنجليزية
+    30-i18n.js … 36-i18n3.js         النصوص العربية والإنجليزية
     40-core.js                       الحالة والحفظ والتنقل والنقاط
     50-plan.js                       خوارزمية الخطة والتصدير
     60-today.js                      لوحة اليوم وغرفة التركيز
     70-tutor.js                      المعلّم وقراءة الملفات
+    71-lens.js                       عدسة يونس: الكاميرا وتحليل الصور
+    72-translate.js                  ترجمة الملفات والصور وتنزيل Word
+    73-uni.js                        جامعتي ومتتبع التخرج
     75-site.js                       الصفحة الرئيسية والمعالج والصلاة
     77-ai.js                         عميل Claude والتحليل الذكي
     78-chat.js                       «اسأل يونس»
     80-rest.js                       المراجعة والإحصاءات والعلامات والتشغيل
+  data/unis/           قائمة الجامعات لكل دولة (Hipo، رخصة MIT)
+  data/catalog/        الخطط الدراسية الموثّقة (aau.json)
+  tools/               build_unis.py وfetch_aau.py لتحديث البيانات
   fonts/               خطوط Lalezar وReadex Pro وIBM Plex Mono (رخصة OFL)
-  tests/e2e.js         59 فحصاً آلياً (الوظائف، CSP، سهولة الوصول، الجوال)
+  tests/e2e.js         82 فحصاً آلياً (الوظائف، CSP، سهولة الوصول، الجوال، العدسة، الترجمة، الجامعات)
+  GUIDE.md             الدليل العملي لكل ميزة
   build_web.py         يبني الموقع إلى ../docs
   build_artifact.py    يبني نسخة Claude في ملف واحد
 ```
@@ -104,9 +121,9 @@ git subtree split --prefix docs -b gh-pages && git push origin gh-pages
 ```
 
 **نتائج الفحص:**
-- الاختبارات الآلية: 59 من 59.
-- Lighthouse على الكمبيوتر: سهولة الوصول 100، وأفضل الممارسات 100، وSEO 100، والأداء 93.
-- Lighthouse على الجوال (بمحاكاة شبكة بطيئة): الأداء 75، والفئات الأخرى 100.
+- الاختبارات الآلية: 82 من 82.
+- Lighthouse على الكمبيوتر: 100 في الأداء وسهولة الوصول وأفضل الممارسات وSEO.
+- Lighthouse على الجوال (بمحاكاة شبكة بطيئة): الأداء 91، والفئات الأخرى 100.
 
 ## خارطة الطريق
 
@@ -118,6 +135,7 @@ git subtree split --prefix docs -b gh-pages && git push origin gh-pages
 ## الشكر
 
 - صنعه **يونس أبو عجاج**، طالب علم البيانات والذكاء الاصطناعي في جامعة عمّان الأهلية.
+- البيانات: [Hipo University Domains](https://github.com/Hipo/university-domains-list) (MIT)، والخطط الدراسية من [الموقع الرسمي لجامعة عمّان الأهلية](https://www.ammanu.edu.jo/admission/undergraduate-programs/).
 - المكتبات: [pdf.js](https://github.com/mozilla/pdf.js) (Apache-2.0)، و[JSZip](https://github.com/Stuk/jszip) (MIT)، و[Anthropic TypeScript SDK](https://github.com/anthropics/anthropic-sdk-typescript) (MIT).
 - الخطوط: Lalezar وReadex Pro وIBM Plex Mono (SIL Open Font License).
 
@@ -135,6 +153,10 @@ A free, Arabic-first exam-preparation website for school and university students
 - A readiness index and smart insights.
 - A Pomodoro focus room with ambient sound.
 - A tutor that summarises and quizzes your PDF, Word and PowerPoint files.
+- **Younis Lens:** snap or upload up to 5 photos and get a step-by-step solution, explanation, exact transcription, summary, solution check or flashcards (Claude vision).
+- **File translation** into 18 languages: PDF, Word, PowerPoint, Excel, text, photos and scanned PDFs, downloadable as Word.
+- **My university:** pick from 10,000+ universities, see only your university's majors and your own plan's courses; AAU's 53 official plans are verified, other universities via AI search of their official site or manual entry.
+- **Graduation tracker:** hours left, semesters left, and the courses you can take next semester based on prerequisites.
 - Spaced-repetition flashcards and a mistake notebook.
 - Exam timetable import (paste or upload) and a shareable weekly progress image.
 - Progress, badges, and a weekly AI report.

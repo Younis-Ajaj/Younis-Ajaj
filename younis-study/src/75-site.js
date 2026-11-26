@@ -69,7 +69,7 @@ function catGroups(o){
 }
 
 /* ================= LANDING ================= */
-var FEAT_IC=["i-plan","i-stats","i-focus","i-tutor","i-today","i-review","i-fire","i-grades"];
+var FEAT_IC=["i-plan","i-stats","i-focus","i-tutor","i-today","i-review","i-fire","i-grades","i-cam","i-tr","i-uni","i-flag"];
 function renderLanding(){
   var l=L();
   $("featGrid").innerHTML=l.feats.map(function(f,i){return '<article class="fcard reveal"><div class="ic" style="background:var('+HL[i%6]+')"><svg><use href="#'+FEAT_IC[i]+'"/></svg></div><h3>'+esc(f[0])+'</h3><p>'+esc(f[1])+'</p></article>'}).join("");

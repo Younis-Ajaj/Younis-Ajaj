@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self' https://api.anthropic.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
 <meta name="referrer" content="no-referrer">
-<meta name="description" content="يونس: منصة مذاكرة عربية مجانية. خطة يومية تُبنى على موادك، غرفة تركيز، مراجعة متباعدة، دفتر أخطاء، ومواقيت الصلاة.">
+<meta name="description" content="يونس: منصة مذاكرة عربية مجانية. خطة يومية تُبنى على موادك، وعدسة تحلّ ما تصوّره، وترجمة لملفاتك، ومواد تخصصك في جامعتك، وغرفة تركيز ومراجعة متباعدة.">
 <meta name="theme-color" content="#F4F6FB" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0A1020" media="(prefers-color-scheme: dark)">
 <meta property="og:title" content="يونس | منصة المذاكرة الذكية">
-<meta property="og:description" content="يونس: منصة مذاكرة عربية مجانية. خطة يومية تُبنى على موادك، غرفة تركيز، مراجعة متباعدة، دفتر أخطاء، ومواقيت الصلاة.">
+<meta property="og:description" content="يونس: منصة مذاكرة عربية مجانية. خطة يومية تُبنى على موادك، وعدسة تحلّ ما تصوّره، وترجمة لملفاتك، ومواد تخصصك في جامعتك، وغرفة تركيز ومراجعة متباعدة.">
 <meta property="og:type" content="website">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/logo.svg" type="image/svg+xml">
@@ -127,7 +127,7 @@ h3{font-size:1.05rem;font-weight:600;line-height:1.45}
 .row.c{align-items:center}
 .field{flex:1 1 160px;min-width:0}
 label,.lab{display:block;font-size:.84rem;color:var(--ink-soft);margin-bottom:5px}
-input[type=text],input[type=date],input[type=number],select,textarea{
+input[type=text],input[type=search],input[type=date],input[type=number],select,textarea{
   width:100%;color:var(--ink);background:var(--sheet-2);border:1.5px solid var(--rule);border-radius:11px;padding:9px 12px;min-height:44px;transition:border-color .2s,box-shadow .2s
 }
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ink-soft);box-shadow:0 0 0 4px color-mix(in srgb,var(--hl4) 35%,transparent)}
@@ -624,6 +624,107 @@ input[type=file]{max-width:100%;min-width:0;overflow:hidden;font-size:.85rem}
 .brandmark{flex:none;filter:drop-shadow(0 4px 10px rgba(21,33,59,.18))}
 .sharePrev img{display:block;width:100%;max-width:320px;border-radius:18px;margin-top:14px;box-shadow:var(--shadow)}
 </style>
+<style>
+/* ================= Lens, translation, university catalog ================= */
+/* the phone tab bar now scrolls sideways so every page keeps a readable label */
+@media (max-width:960px){
+  .tabbar{justify-content:flex-start;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;gap:2px}
+  .tabbar::-webkit-scrollbar{display:none}
+  .tabbar a{flex:0 0 auto;min-width:68px;scroll-snap-align:center}
+}
+
+.lens-tabs{max-width:460px;margin:0 0 14px}
+.lens-tabs button[aria-selected=true]{background:var(--inverse);color:var(--on-inverse);font-weight:600}
+.lens-src{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.lens-src .btn svg,.btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+
+.cam{position:relative;margin-top:14px;border-radius:16px;overflow:hidden;background:#000;max-width:720px}
+.cam video{display:block;width:100%;max-height:62vh;object-fit:contain;background:#000}
+.cam-bar{position:absolute;inset:auto 0 0;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;background:linear-gradient(transparent,rgba(0,0,0,.65))}
+.cam-bar .btn{background:rgba(255,255,255,.92);color:#15213B;border-color:transparent}
+.shutter{width:68px;height:68px;border-radius:50%;border:5px solid #fff;background:var(--hl1);cursor:pointer;box-shadow:0 0 0 3px rgba(0,0,0,.35)}
+.shutter:active{transform:scale(.94)}
+
+.thumbs{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.thumb{position:relative;width:118px;height:118px;border-radius:12px;overflow:hidden;border:1.5px solid var(--rule);background:var(--sheet-2)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .tb{position:absolute;top:5px;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;border:0;background:rgba(10,16,32,.72);color:#fff;cursor:pointer}
+.thumb .tb svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round}
+.thumb .tb.x{inset-inline-end:5px}.thumb .tb.r{inset-inline-start:5px}
+.thumb small{position:absolute;inset:auto 0 0;background:rgba(10,16,32,.72);color:#fff;font-size:.7rem;text-align:center;padding:2px 4px;direction:ltr}
+
+.opts{margin-top:10px;gap:18px;flex-wrap:wrap}
+.chk{gap:8px;margin:0;color:var(--ink);font-size:.9rem}
+.chk input{width:18px;height:18px;accent-color:var(--ink);flex:none}
+
+/* rendered answers (safe markdown) */
+.md{line-height:1.85;overflow-wrap:anywhere;margin-top:8px}
+.md p{margin:0 0 8px}
+.md h4{margin:14px 0 6px;font-size:1.05rem}
+.md ul,.md ol{margin:4px 0 10px;padding-inline-start:1.4em}
+.md li{margin-bottom:4px}
+.md code{font-family:var(--mono);font-size:.88em;background:var(--rule);padding:0 5px;border-radius:5px}
+.md pre{direction:ltr;text-align:left;background:var(--inverse);color:var(--on-inverse);padding:10px 12px;border-radius:10px;overflow-x:auto}
+.md .tbl{overflow-x:auto;margin:6px 0 12px}
+.md table,.msg table{border-collapse:collapse;min-width:60%;font-size:.92rem}
+.md th,.md td,.msg th,.msg td{border:1px solid var(--rule);padding:6px 10px;text-align:start;vertical-align:top}
+.md th,.msg th{background:var(--sheet-2)}
+.md hr{border:0;border-top:1.5px dashed var(--rule);margin:14px 0}
+.md[aria-busy=true]::after{content:"";display:inline-block;width:.55em;height:1em;margin-inline-start:4px;vertical-align:-.15em;background:var(--hl1);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.md[aria-busy=true]::after{animation:none}}
+.pageh{display:block;font-size:.8rem;font-weight:600;color:var(--ink-soft);margin:16px 0 6px;padding-top:10px;border-top:1.5px dashed var(--rule)}
+
+/* university catalog */
+.steps{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0 0 14px;padding:0;list-style:none;font-size:.86rem;color:var(--ink-soft)}
+.steps li{display:flex;align-items:center;gap:6px}
+.steps li b{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--sheet-2);border:1.5px solid var(--rule);font-size:.78rem}
+.steps li.on{color:var(--ink);font-weight:600}
+.steps li.on b{background:var(--hl1);color:var(--on-hl);border-color:transparent}
+.steps li.done b{background:var(--hl3);color:var(--on-hl);border-color:transparent}
+.pick{list-style:none;margin:12px 0 0;padding:0;max-height:min(56vh,520px);overflow-y:auto;border:1.5px solid var(--rule);border-radius:14px}
+.pick li+li{border-top:1px solid var(--rule)}
+.pick button{display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;text-align:start;background:transparent;border:0;padding:12px 14px;cursor:pointer;color:var(--ink);font:inherit;min-height:48px}
+.pick button:hover,.pick button:focus-visible{background:var(--sheet-2)}
+.pick .sub{display:block;font-size:.8rem;color:var(--ink-soft);direction:ltr;text-align:start}
+.pick .rtl{direction:inherit}
+.vtag{display:inline-flex;align-items:center;gap:4px;font-size:.72rem;font-weight:700;border-radius:20px;padding:2px 9px;background:var(--hl3);color:var(--on-hl);white-space:nowrap}
+.vtag.ai{background:var(--hl6)}
+.vtag.me{background:var(--hl5)}
+.facs{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0}
+.uni-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.uni-head h2{margin:0;font-size:1.25rem}
+.uni-head .soft{margin:2px 0 0}
+.grad{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;margin-top:16px}
+@media (max-width:860px){.grad{grid-template-columns:1fr}}
+.bigpct{font-family:var(--display);font-size:3rem;line-height:1;margin:6px 0}
+.gbars{display:grid;gap:10px;margin-top:10px}
+.gbar .row{justify-content:space-between;font-size:.88rem}
+.gbar .progress{margin:4px 0 0}
+.grp{margin-top:18px}
+.grp h3{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:1.02rem;margin:0 0 8px}
+.crs{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.crs li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;align-items:center;border:1.5px solid var(--rule);border-radius:14px;padding:10px 12px;background:var(--sheet)}
+.crs li.done{background:color-mix(in srgb,var(--hl3) 22%,var(--sheet));border-color:color-mix(in srgb,var(--hl3) 70%,var(--rule))}
+.crs li.now{background:color-mix(in srgb,var(--hl1) 22%,var(--sheet));border-color:color-mix(in srgb,var(--hl1) 80%,var(--rule))}
+.crs .nm{font-weight:600}
+.crs .meta{display:block;font-size:.78rem;color:var(--ink-soft);margin-top:2px}
+.crs .meta bdi{font-family:var(--mono)}
+.crs .lock{color:var(--warn)}
+.st{display:flex;border:1.5px solid var(--rule);border-radius:10px;overflow:hidden}
+.st button{border:0;border-inline-start:1.5px solid var(--rule);background:var(--sheet-2);padding:6px 10px;min-height:38px;cursor:pointer;font-size:.8rem;color:var(--ink)}
+.st button:first-child{border-inline-start:0}
+.st button[aria-pressed=true]{background:var(--inverse);color:var(--on-inverse);font-weight:600}
+.nextlist{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
+.nextlist li{display:flex;justify-content:space-between;gap:10px;font-size:.92rem;padding:7px 10px;border-radius:10px;background:var(--sheet-2)}
+.srcline{font-size:.8rem;color:var(--ink-soft);margin:10px 0 0;overflow-wrap:anywhere}
+.srcline a{color:inherit}
+@media (max-width:640px){
+  .crs li{grid-template-columns:1fr}
+  .st{justify-self:start}
+  .thumb{width:96px;height:96px}
+}
+</style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -648,6 +749,13 @@ input[type=file]{max-width:100%;min-width:0;overflow:hidden;font-size:.85rem}
   <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></symbol>
   <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4M12 13v5M9.5 15.5h5"/></symbol>
   <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></symbol>
+  <symbol id="i-cam" viewBox="0 0 24 24"><path d="M3 8h4l2-3h6l2 3h4v12H3z"/><circle cx="12" cy="13.5" r="3.6"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></symbol>
+  <symbol id="i-uni" viewBox="0 0 24 24"><path d="M3 9l9-5 9 5"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20.5h18"/></symbol>
+  <symbol id="i-tr" viewBox="0 0 24 24"><path d="M3 5h10M8 3v2M5 5c0 4 3 7 7 8M11 5c-1 4-4 7-8 8"/><path d="M12 21l4.5-10 4.5 10M13.6 17.5h5.8"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h12l-2.5 4L17 12H5"/></symbol>
+  <symbol id="i-rotate" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
   <symbol id="i-max" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
 </svg>
 <canvas id="aurora" aria-hidden="true"></canvas>
@@ -660,8 +768,8 @@ input[type=file]{max-width:100%;min-width:0;overflow:hidden;font-size:.85rem}
       </div>
       <nav class="links"><button type="button" data-jump="l-feat" data-t="l_navFeat">المزايا</button><button type="button" data-jump="l-how" data-t="l_navHow">كيف يعمل</button><button type="button" data-jump="l-arab" data-t="l_navArab">مصمَّم لك</button><button type="button" data-jump="l-faq" data-t="l_navFaq">أسئلة شائعة</button></nav>
       <button class="iconbtn" id="lTheme" type="button" data-ta="aTheme"><svg><use href="#i-moon"/></svg></button>
-      <button class="iconbtn" id="lLang" type="button"></button>
-      <button class="btn primary sm" type="button" data-go-app></button>
+      <button class="iconbtn" id="lLang" type="button">English</button>
+      <button class="btn primary sm" type="button" data-go-app>ابدأ الآن مجاناً</button>
     </div>
   </header>
 
@@ -670,12 +778,12 @@ input[type=file]{max-width:100%;min-width:0;overflow:hidden;font-size:.85rem}
       <div>
         <span class="eyebrow"><i>✓</i><span data-t="l_eyebrow">منصة مذاكرة عربية للمدرسة والتوجيهي والجامعة</span></span>
         <h1><span data-t="l_h1a">امتحاناتك</span> <em data-t="l_h1b">تحت السيطرة</em></h1>
-        <p class="sub" data-t="l_sub">خطة مذاكرة يوماً بيوم تُبنى على موادك أنت، غرفة تركيز بأصوات هادئة، معلّم ذكي يشرح ويختبرك من ملفاتك، ومراجعة تثبّت المعلومة حتى يوم الامتحان.</p>
+        <p class="sub" data-t="l_sub">خطة مذاكرة يوماً بيوم تُبنى على موادك أنت، غرفة تركيز بأصوات هادئة، ملخصات واختبارات من ملفاتك، ومراجعة تثبّت المعلومة حتى يوم الامتحان.</p>
         <div class="actions">
-          <button class="btn primary big" type="button" data-go-app></button>
+          <button class="btn primary big" type="button" data-go-app>ابدأ الآن مجاناً</button>
           <button class="btn ghost" type="button" data-jump="l-how" data-t="l_how">شاهد كيف يعمل</button>
         </div>
-        <div class="trust"><span data-t="l_t1">بالعربية أولاً</span><span data-t="l_t2">موادك وبياناتك لك وحدك</span><span data-t="l_t3">يعمل على الجوال والكمبيوتر</span><span data-t="l_t4">معلّم ذكي من Claude</span></div>
+        <div class="trust"><span data-t="l_t1">بالعربية أولاً</span><span data-t="l_t2">موادك وبياناتك لك وحدك</span><span data-t="l_t3">يعمل على الجوال والكمبيوتر</span><span data-t="l_t4">يعمل بدون إنترنت بعد أول زيارة</span></div>
       </div>
       <div class="scene" aria-hidden="true">
         <svg viewBox="0 0 560 460">
@@ -776,7 +884,7 @@ input[type=file]{max-width:100%;min-width:0;overflow:hidden;font-size:.85rem}
       <div id="ctaOwl"></div>
       <h2 class="display" style="font-size:clamp(1.8rem,4vw,2.5rem);margin:0 0 8px" data-t="l_ctaH">الامتحان قادم، وخطتك تنتظرك</h2>
       <p data-t="l_ctaP">ابدأ الآن، واختر موادك، ودع يونس يرتّب لك الباقي.</p>
-      <button class="btn hl" type="button" data-go-app></button>
+      <button class="btn hl" type="button" data-go-app>ابدأ الآن مجاناً</button>
     </section>
   </div>
   <footer class="lfoot"><div class="lwrap"><p style="margin:0" data-t="credit">صنعه يونس أبو عجاج، طالب علم البيانات والذكاء الاصطناعي.</p></div></footer>
@@ -869,6 +977,67 @@ input[type=file]{max-width:100%;min-width:0;overflow:hidden;font-size:.85rem}
         </div>
       </section>
 
+      <!-- ================= LENS: camera, image analysis and translation ================= -->
+      <section class="view" id="v-lens">
+        <header class="vhead"><h1 class="display"><span data-t="lensH">عدسة يونس</span></h1><p data-t="lensLede">صوّر سؤالاً أو صفحة أو مخططاً واسأل عنه، أو ترجم أي ملف أو صورة بدقة.</p></header>
+        <div class="seg lens-tabs" role="tablist" data-ta="lensH">
+          <button type="button" role="tab" id="lensTabA" aria-controls="lensA" aria-selected="true" data-t="lensTabA">صوّر واسأل</button>
+          <button type="button" role="tab" id="lensTabT" aria-controls="lensT" aria-selected="false" data-t="lensTabT">ترجمة الملفات</button>
+        </div>
+        <div class="banner" id="lensKey" hidden><p data-t="lensNeedKey">هذه الأداة تعمل بالذكاء الاصطناعي، فعّل المعلّم الذكي بمفتاحك مرة واحدة لتستخدمها.</p><a class="btn sm primary" href="#tutor" data-t="lensKeyBtn">فعّله الآن</a></div>
+        <div id="lensA" role="tabpanel" aria-labelledby="lensTabA">
+          <div class="sheet tape">
+            <div class="lens-src">
+              <button class="btn primary" type="button" id="camOpen"><svg><use href="#i-cam"/></svg><span data-t="camOpen">افتح الكاميرا</span></button>
+              <label class="btn ghost"><svg><use href="#i-image"/></svg><span data-t="imgPick">ارفع صورة</span><input type="file" id="imgFile" accept="image/*" multiple hidden></label>
+              <span class="soft small" data-t="imgPaste">أو الصق صورة (Ctrl+V) أو اسحبها إلى هنا. حتى 5 صور.</span>
+            </div>
+            <div class="cam" id="camBox" hidden>
+              <video id="camVideo" playsinline autoplay muted></video>
+              <div class="cam-bar">
+                <button class="btn sm" type="button" id="camFlip" data-t="camFlip">بدّل الكاميرا</button>
+                <button class="shutter" type="button" id="camShot" data-ta="camShot"></button>
+                <button class="btn sm" type="button" id="camClose" data-t="camClose">إغلاق</button>
+              </div>
+            </div>
+            <p class="error" id="camErr" role="alert" hidden></p>
+            <div class="thumbs" id="imgThumbs"></div>
+            <div style="margin-top:14px"><span class="lab" data-t="lensModeQ">ماذا تريد من الصورة؟</span><div class="chips" id="lensModes" role="group" data-ta="lensModeQ"></div></div>
+            <div style="margin-top:12px"><label for="lensAsk" data-t="lensAskL">اطلب بالضبط ما تريد (اختياري)</label><textarea id="lensAsk" rows="2" maxlength="2000" data-tp="lensAskP" placeholder="مثال: حلّ السؤال الثالث فقط، أو اشرح الرسم البياني ببساطة"></textarea></div>
+            <div class="actions" style="margin-top:12px"><button class="btn primary" type="button" id="lensGo" data-t="lensGo">حلّل الصورة</button><button class="btn ghost" type="button" id="lensStop" hidden data-t="stop">أوقف</button></div>
+            <p class="soft small" style="margin:10px 0 0" data-t="lensPrivacy">لا تُرسل الصورة إلا حين تضغط «حلّل»، وتذهب من جهازك إلى Anthropic مباشرة. لا يحفظها الموقع.</p>
+          </div>
+          <div class="sheet" id="lensPanel" hidden style="margin-top:16px">
+            <div class="row c" style="justify-content:space-between"><h3 data-t="lensResult">النتيجة</h3><button class="btn sm ghost" type="button" id="lensCopy"><svg><use href="#i-copy"/></svg><span data-t="copy">نسخ</span></button></div>
+            <div class="md" id="lensOut"></div>
+            <div id="lensExtra"></div>
+            <form class="row c" id="lensFollow" style="margin-top:14px" hidden><div class="field"><label for="lensQ" data-t="lensFollowL">سؤال متابعة عن الصورة نفسها</label><input type="text" id="lensQ" maxlength="1000" autocomplete="off"></div><button class="btn sm primary" type="submit" data-t="ask">اسأل</button></form>
+          </div>
+        </div>
+        <div id="lensT" role="tabpanel" aria-labelledby="lensTabT" hidden>
+          <div class="sheet tape mint">
+            <div class="row">
+              <div class="field"><label for="trFile" data-t="trFileL">ارفع ملفاً أو صورة</label><input type="file" id="trFile" accept=".pdf,.docx,.pptx,.xlsx,.txt,.md,.csv,image/*"></div>
+              <div class="field"><label for="trTo" data-t="trTo">ترجم إلى</label><select id="trTo"></select></div>
+            </div>
+            <div style="margin-top:10px"><label for="trText" data-t="trTextL">أو الصق النص هنا</label><textarea id="trText" rows="5" maxlength="200000" data-tp="trTextP" placeholder="الصق النص الذي تريد ترجمته…"></textarea></div>
+            <div class="row c opts">
+              <label class="row c chk"><input type="checkbox" id="trTerms" checked><span data-t="trTerms">أبقِ المصطلحات العلمية بالإنجليزية بين قوسين</span></label>
+              <label class="row c chk"><input type="checkbox" id="trSimple"><span data-t="trSimple">بلغة مبسّطة</span></label>
+            </div>
+            <p class="soft small" id="trInfo" aria-live="polite" style="margin:8px 0 0"></p>
+            <div class="actions" style="margin-top:12px"><button class="btn primary" type="button" id="trGo" data-t="trGo">ترجم</button><button class="btn ghost" type="button" id="trStop" hidden data-t="stop">أوقف</button></div>
+            <p class="soft small" style="margin:10px 0 0" data-t="trPrivacy">يُقرأ الملف داخل متصفحك، ثم يُرسل نصه أو صوره إلى Anthropic للترجمة فقط.</p>
+          </div>
+          <div class="sheet" id="trPanel" hidden style="margin-top:16px">
+            <div class="row c" style="justify-content:space-between;gap:8px"><h3 data-t="trResult">الترجمة</h3><div class="actions"><button class="btn sm ghost" type="button" id="trCopy"><svg><use href="#i-copy"/></svg><span data-t="copy">نسخ</span></button><button class="btn sm ghost" type="button" id="trDocx"><svg><use href="#i-down"/></svg><span data-t="trDocx">Word</span></button><button class="btn sm ghost" type="button" id="trTxt"><svg><use href="#i-down"/></svg><span data-t="trTxt">نص</span></button></div></div>
+            <div class="progress" id="trProg" hidden><i></i></div>
+            <p class="soft small" id="trStatus" aria-live="polite" style="margin:4px 0 0"></p>
+            <div class="md" id="trOut"></div>
+          </div>
+        </div>
+      </section>
+
       <!-- ================= PLAN ================= -->
       <section class="view" id="v-plan">
         <header class="vhead"><h1 class="display"><span data-t="h1">وزّع موادك على الأيام قبل الامتحانات</span></h1><p data-t="lede">أدخل موادك وتواريخ امتحاناتها وعدد فصولها، والخوارزمية تحسب ما تحتاجه كل مادة وتوزّع ساعاتك يوماً بيوم.</p></header>
@@ -879,7 +1048,7 @@ input[type=file]{max-width:100%;min-width:0;overflow:hidden;font-size:.85rem}
             <label for="impText" data-t="impL">جدول الامتحانات</label><textarea id="impText" data-tp="impP" placeholder="مثال:
 إحصاء 2026-12-10
 قواعد البيانات 14/12/2026"></textarea>
-            <div class="row c" style="margin-top:8px"><label class="btn sm ghost" style="margin:0;color:var(--ink)"><svg><use href="#i-up"/></svg><span data-t="impFileL">ارفع ملف الجدول</span><input type="file" id="impFile" accept=".pdf,.docx,.xlsx,.txt,.csv" hidden></label><button class="btn sm primary" id="impGo" type="button" data-t="impGo">استخرج المواد والتواريخ</button></div>
+            <div class="row c" style="margin-top:8px"><label class="btn sm ghost" style="margin:0;color:var(--ink)"><svg><use href="#i-up"/></svg><span data-t="impFileL">ارفع ملف الجدول</span><input type="file" id="ttFile" accept=".pdf,.docx,.xlsx,.txt,.csv" hidden></label><button class="btn sm primary" id="impGo" type="button" data-t="impGo">استخرج المواد والتواريخ</button></div>
             <div id="impOut" style="margin-top:10px"></div>
           </div>
         </div>
@@ -917,7 +1086,7 @@ input[type=file]{max-width:100%;min-width:0;overflow:hidden;font-size:.85rem}
           <div class="progress" aria-hidden="true"><i id="progBar"></i></div>
           <p class="soft small" id="progText" style="margin:0"></p>
           <div class="actions" style="margin-top:12px">
-            <button class="btn sm" id="copyBtn" type="button"><svg><use href="#i-copy"/></svg><span data-t="copy">انسخ خطة الأسبوع</span></button>
+            <button class="btn sm" id="copyBtn" type="button"><svg><use href="#i-copy"/></svg><span data-t="copy">نسخ</span></button>
             <button class="btn sm" id="calBtn" type="button"><svg><use href="#i-cal"/></svg><span data-t="calBtn">صدّر إلى التقويم</span></button>
             <button class="btn sm ghost" id="restartBtn" type="button" data-t="restart">أعد التوزيع من اليوم</button>
           </div>
@@ -960,7 +1129,7 @@ input[type=file]{max-width:100%;min-width:0;overflow:hidden;font-size:.85rem}
 
       <!-- ================= TUTOR ================= -->
       <section class="view" id="v-tutor">
-        <header class="vhead"><h1 class="display"><span data-t="tutorH">المعلّم الذكي</span></h1><p data-t="tutorLede">ارفع ملفات مادتك أو اكتب الموضوع، واختر طريقة الدراسة: شرح، تلخيص، خريطة ذهنية، اختبار بتوقيت، بطاقات تلقائية، أو اختبر فهمك بطريقة فاينمان.</p></header>
+        <header class="vhead"><h1 class="display"><span data-t="tutorH">المعلّم الذكي</span></h1><p data-t="tutorLede">ارفع ملفات مادتك أو الصق المحتوى، واحصل على أهم ما فيه واختبار منه داخل متصفحك. وإذا فعّلت المعلّم الذكي بمفتاحك، يُرسل ما تطلب شرحه أو تحليله إلى Anthropic فقط.</p></header>
         <div id="tutor">
           <div class="sheet tape mint" id="aiKeyBox" hidden style="margin-bottom:16px"></div>
           <p class="banner" id="tutorNote" data-t="tutorCheck">جارٍ التحقق من توفر المعلّم الذكي…</p>
@@ -1035,6 +1204,12 @@ input[type=file]{max-width:100%;min-width:0;overflow:hidden;font-size:.85rem}
         </div>
         <h2 class="sec"><span data-t="mistH">دفتر الأخطاء</span><span class="chip" id="mistCount"></span></h2>
         <div class="sheet"><p class="soft small" style="margin:0" data-t="mistLede">كل سؤال أخطأت فيه في اختبارات المعلّم يُحفظ هنا مع الجواب الصحيح وسببه. حوّله إلى بطاقة بضغطة.</p><div class="actions ai-only" style="margin-top:10px"><button class="btn sm hl" id="mistAIBtn" type="button"><svg><use href="#i-tutor"/></svg><span data-t="mistAI">حلّل أخطائي بالذكاء الاصطناعي</span></button></div><div class="out" id="mistAIOut" aria-live="polite"></div><ul class="mlist" id="mlist"></ul></div>
+      </section>
+
+      <!-- ================= MY UNIVERSITY: catalog and graduation tracker ================= -->
+      <section class="view" id="v-uni">
+        <header class="vhead"><h1 class="display"><span data-t="uniH">جامعتي</span></h1><p data-t="uniLede">اختر جامعتك وتخصصك، فتظهر لك مواد خطتك فقط، وتتابع ساعاتك حتى التخرج.</p></header>
+        <div id="uniBody"></div>
       </section>
 
       <!-- ================= STATS ================= -->
